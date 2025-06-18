@@ -56,6 +56,9 @@
     "xml2js": "^0.6.2",
     "@types/xml2js": "^0.4.14",
     "archiver": "^6.0.1",
-    "@types/archiver": "^6.0.2"
+    "@types/archiver": "^6.0.2",
+    "hummus-recipe": "^1.7.0",
+    "sharp": "^0.33.0",
+    "canvas": "^2.11.2"
   }
 }

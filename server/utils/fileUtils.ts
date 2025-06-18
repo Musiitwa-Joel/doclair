@@ -16,40 +16,84 @@ const FileSchema = z.object({
   buffer: z.instanceof(Buffer),
 });
 
-const ALLOWED_MIME_TYPES = [
+const ALLOWED_DOCUMENT_MIMES = [
   "application/msword",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   "application/vnd.ms-word",
-  "application/pdf", // Added PDF support
+  "application/pdf", // Support both Word and PDF files
 ] as const;
 
-const ALLOWED_EXTENSIONS = [".doc", ".docx", ".pdf"] as const; // Added .pdf
+const ALLOWED_IMAGE_MIMES = [
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+] as const;
 
-export function validateFile(file: MulterFile): FileValidationResult {
+const ALLOWED_DOCUMENT_EXTENSIONS = [".doc", ".docx", ".pdf"] as const;
+const ALLOWED_IMAGE_EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".webp",
+  ".gif",
+] as const;
+
+export function validateFile(
+  file: MulterFile,
+  fileType: "document" | "image" = "document"
+): FileValidationResult {
   try {
     // Log the filename for debugging
-    logger.info(`Validating file: "${file.originalname}"`);
+    logger.info(`Validating ${fileType} file: "${file.originalname}"`);
 
     // Validate with Zod schema
     FileSchema.parse(file);
 
     const fileExtension = path.extname(file.originalname).toLowerCase();
 
-    // Check file type - more flexible validation for different conversion types
-    const isPdfFile =
-      file.mimetype === "application/pdf" || fileExtension === ".pdf";
-    const isWordFile =
-      ALLOWED_MIME_TYPES.slice(0, 3).includes(file.mimetype as any) ||
-      [".doc", ".docx"].includes(fileExtension);
+    // Check file type based on expected type
+    let isValidType = false;
 
-    if (!isPdfFile && !isWordFile) {
-      logger.warn(
-        `Invalid file type: ${file.mimetype}, extension: ${fileExtension}`
-      );
-      return {
-        isValid: false,
-        error: "Only Word documents (.doc, .docx) and PDF files are supported",
-      };
+    if (fileType === "image") {
+      const isImageFile =
+        ALLOWED_IMAGE_MIMES.includes(file.mimetype as any) ||
+        ALLOWED_IMAGE_EXTENSIONS.includes(fileExtension as any);
+      isValidType = isImageFile;
+
+      if (!isValidType) {
+        logger.warn(
+          `Invalid image file type: ${file.mimetype}, extension: ${fileExtension}`
+        );
+        return {
+          isValid: false,
+          error: "Only image files (JPG, PNG, WebP, GIF) are supported",
+        };
+      }
+    } else {
+      // Document validation (Word/PDF)
+      const isPdfFile =
+        file.mimetype === "application/pdf" || fileExtension === ".pdf";
+      const isWordFile =
+        [
+          "application/msword",
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+          "application/vnd.ms-word",
+        ].includes(file.mimetype) || [".doc", ".docx"].includes(fileExtension);
+
+      isValidType = isPdfFile || isWordFile;
+
+      if (!isValidType) {
+        logger.warn(
+          `Invalid document file type: ${file.mimetype}, extension: ${fileExtension}`
+        );
+        return {
+          isValid: false,
+          error:
+            "Only Word documents (.doc, .docx) and PDF files are supported",
+        };
+      }
     }
 
     // Check for empty file
@@ -167,6 +211,11 @@ export function getMimeType(filename: string): string {
     ".pdf": "application/pdf",
     ".rtf": "application/rtf",
     ".odt": "application/vnd.oasis.opendocument.text",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+    ".gif": "image/gif",
   };
 
   return mimeTypes[ext] || "application/octet-stream";
@@ -182,12 +231,24 @@ export function formatFileSize(bytes: number): string {
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
-export function isValidFileType(mimetype: string, filename: string): boolean {
+export function isValidFileType(
+  mimetype: string,
+  filename: string,
+  fileType: "document" | "image" = "document"
+): boolean {
   const extension = getFileExtension(filename);
-  return (
-    ALLOWED_MIME_TYPES.includes(mimetype as any) ||
-    ALLOWED_EXTENSIONS.includes(extension as any)
-  );
+
+  if (fileType === "image") {
+    return (
+      ALLOWED_IMAGE_MIMES.includes(mimetype as any) ||
+      ALLOWED_IMAGE_EXTENSIONS.includes(extension as any)
+    );
+  } else {
+    return (
+      ALLOWED_DOCUMENT_MIMES.includes(mimetype as any) ||
+      ALLOWED_DOCUMENT_EXTENSIONS.includes(extension as any)
+    );
+  }
 }
 
 export function generateTempFilename(

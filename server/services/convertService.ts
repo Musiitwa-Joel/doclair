@@ -2,14 +2,14 @@ import fs from "fs/promises";
 import path from "path";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { logger } from "../utils/logger";
-import { config } from "../config/environment";
+import { logger } from "../utils/logger.js";
+import { config } from "../config/environment.js";
 import {
   ConversionOptions,
   ConversionResult,
   ConversionSettings,
-} from "../types/index";
-import { generateTempFilename, sanitizeFilename } from "../utils/fileUtils";
+} from "../types/index.js";
+import { generateTempFilename, sanitizeFilename } from "../utils/fileUtils.js";
 
 const execAsync = promisify(exec);
 
@@ -134,7 +134,7 @@ class ConvertService {
       await fs.mkdir(testOutputDir, { recursive: true });
       await fs.writeFile(testInputPath, testDocContent);
 
-      // Test conversion
+      // Test conversion with simple command
       const testCommand = `"${libreOfficePath}" --headless --convert-to pdf --outdir "${testOutputDir}" "${testInputPath}"`;
 
       const { stdout, stderr } = await execAsync(testCommand, {
@@ -210,12 +210,20 @@ class ConvertService {
       throw new Error("File appears to be too small or corrupted");
     }
 
+    // Validate Word document structure
+    if (!this.isValidWordDocument(fileBuffer, filename)) {
+      throw new Error("File does not appear to be a valid Word document");
+    }
+
     // Generate unique temporary filenames
     const tempId = Math.random().toString(36).substr(2, 9);
     const inputExtension = path.extname(filename).toLowerCase();
+    const sanitizedBasename = this.sanitizeForLibreOffice(
+      path.basename(filename, inputExtension)
+    );
     const inputPath = path.join(
       this.tempDir,
-      `input_${tempId}${inputExtension}`
+      `${sanitizedBasename}_${tempId}${inputExtension}`
     );
     const outputDir = path.join(this.tempDir, `output_${tempId}`);
 
@@ -237,7 +245,7 @@ class ConvertService {
         );
       }
 
-      // Try LibreOffice conversion first
+      // Try LibreOffice conversion
       let pdfBuffer: Buffer;
       try {
         pdfBuffer = await this.convertWithLibreOffice(
@@ -292,6 +300,73 @@ class ConvertService {
     }
   }
 
+  private isValidWordDocument(buffer: Buffer, filename: string): boolean {
+    const extension = path.extname(filename).toLowerCase();
+
+    try {
+      if (extension === ".docx") {
+        // DOCX files are ZIP archives - check for ZIP signature
+        const zipSignature = buffer.slice(0, 4);
+        const isZip =
+          zipSignature[0] === 0x50 &&
+          zipSignature[1] === 0x4b &&
+          (zipSignature[2] === 0x03 || zipSignature[2] === 0x05) &&
+          (zipSignature[3] === 0x04 || zipSignature[3] === 0x06);
+
+        if (!isZip) {
+          logger.warn(
+            `⚠️ DOCX file ${filename} does not have valid ZIP signature`
+          );
+          return false;
+        }
+
+        // Check for DOCX-specific content
+        const bufferString = buffer.toString("binary");
+        const hasWordContent =
+          bufferString.includes("word/") ||
+          bufferString.includes(
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+          );
+
+        if (!hasWordContent) {
+          logger.warn(
+            `⚠️ DOCX file ${filename} does not contain Word document structure`
+          );
+          return false;
+        }
+
+        return true;
+      } else if (extension === ".doc") {
+        // DOC files are OLE compound documents - check for OLE signature
+        const oleSignature = buffer.slice(0, 8);
+        const isOle =
+          oleSignature[0] === 0xd0 &&
+          oleSignature[1] === 0xcf &&
+          oleSignature[2] === 0x11 &&
+          oleSignature[3] === 0xe0 &&
+          oleSignature[4] === 0xa1 &&
+          oleSignature[5] === 0xb1 &&
+          oleSignature[6] === 0x1a &&
+          oleSignature[7] === 0xe1;
+
+        if (!isOle) {
+          logger.warn(
+            `⚠️ DOC file ${filename} does not have valid OLE signature`
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // For other extensions, assume valid
+      return true;
+    } catch (error) {
+      logger.warn(`⚠️ Could not validate Word document ${filename}:`, error);
+      return true; // Assume valid if we can't check
+    }
+  }
+
   private async convertWithLibreOffice(
     inputPath: string,
     outputDir: string,
@@ -304,22 +379,11 @@ class ConvertService {
     const profileDir = path.join(this.tempDir, `profile_${Date.now()}`);
     await fs.mkdir(profileDir, { recursive: true });
 
-    // Build LibreOffice command with advanced settings
-    let command = `"${libreOfficePath}" --headless --invisible --convert-to pdf`;
+    // Build LibreOffice command - FIXED: Simplified without complex filter options
+    let command = `"${libreOfficePath}" --headless --invisible --nodefault --nolockcheck --nologo --norestore`;
 
-    // Add quality settings
-    if (settings.quality === "small") {
-      command +=
-        ':writer_pdf_Export:{"Quality":50,"ReduceImageResolution":true,"MaxImageResolution":150}';
-    } else if (settings.quality === "medium") {
-      command +=
-        ':writer_pdf_Export:{"Quality":75,"ReduceImageResolution":true,"MaxImageResolution":300}';
-    } else {
-      command +=
-        ':writer_pdf_Export:{"Quality":95,"ReduceImageResolution":false}';
-    }
-
-    command += ` --outdir "${outputDir}" "${inputPath}"`;
+    // Use simple conversion without complex filter options to avoid shell escaping issues
+    command += ` --convert-to pdf --outdir "${outputDir}" "${inputPath}"`;
 
     logger.info(`🔧 LibreOffice command: ${command}`);
 
@@ -333,6 +397,7 @@ class ConvertService {
         HOME: profileDir,
         TMPDIR: this.tempDir,
         USER_PROFILE: profileDir,
+        USER: process.env.USER || "doclair",
         // LibreOffice specific settings
         SAL_USE_VCLPLUGIN: "svp",
         SAL_DISABLE_OPENCL: "1",
@@ -347,6 +412,9 @@ class ConvertService {
         // Additional stability settings
         OOO_FORCE_DESKTOP: "headless",
         SAL_DISABLE_DEFAULTFONT: "1",
+        // Document-specific settings
+        SAL_DISABLE_CRASHDUMP: "1",
+        SAL_LOG: "-WARN+INFO",
       },
     };
 
@@ -369,7 +437,7 @@ class ConvertService {
     }
 
     // Wait for file system to sync
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // Try to find and read the PDF output
     const pdfBuffer = await this.findAndReadPdfOutput(
@@ -382,10 +450,35 @@ class ConvertService {
       throw new Error("LibreOffice generated empty PDF file");
     }
 
+    // Validate the generated PDF
+    if (!this.isValidPdf(pdfBuffer)) {
+      throw new Error("LibreOffice generated invalid PDF file");
+    }
+
     logger.info(
       `✅ LibreOffice conversion successful: ${pdfBuffer.length} bytes`
     );
     return pdfBuffer;
+  }
+
+  private isValidPdf(buffer: Buffer): boolean {
+    try {
+      // Check PDF magic number
+      const pdfHeader = buffer.slice(0, 4).toString();
+      if (pdfHeader !== "%PDF") {
+        return false;
+      }
+
+      // Check for PDF trailer
+      const bufferString = buffer.toString("binary");
+      const hasTrailer =
+        bufferString.includes("%%EOF") || bufferString.includes("trailer");
+
+      return hasTrailer;
+    } catch (error) {
+      logger.warn("⚠️ Could not validate PDF:", error);
+      return true; // Assume valid if we can't check
+    }
   }
 
   private async findAndReadPdfOutput(
@@ -399,16 +492,15 @@ class ConvertService {
       originalFilename,
       path.extname(originalFilename)
     );
+    const sanitizedOriginal = this.sanitizeForLibreOffice(originalBasename);
 
     // More comprehensive list of possible PDF names
     const possiblePdfNames = [
       `${inputBasename}.pdf`,
       `${originalBasename}.pdf`,
-      `${sanitizeFilename(originalBasename)}.pdf`,
+      `${sanitizedOriginal}.pdf`,
       `${inputBasename.toLowerCase()}.pdf`,
       `${originalBasename.toLowerCase()}.pdf`,
-      `${this.sanitizeForLibreOffice(originalBasename)}.pdf`,
-      `${this.sanitizeForLibreOffice(inputBasename)}.pdf`,
       // Sometimes LibreOffice creates generic names
       "document.pdf",
       "output.pdf",
@@ -771,6 +863,7 @@ class ConvertService {
       "Exception:",
       "Abort",
       "Crash",
+      "source file could not be loaded",
     ];
 
     const stderrLower = stderr.toLowerCase();

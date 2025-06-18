@@ -2,13 +2,16 @@ import express from "express";
 import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
-import { config } from "./config/environment";
-import { logger } from "./utils/logger";
-import { errorHandler, notFoundHandler } from "./middleware/errorHandler";
-import conversionRoutes from "./routes/conversion";
-import pdfToWordRoutes from "./routes/pdfToWordConversion";
-import healthRoutes from "./routes/health";
-import pdfToWordHealthRoutes from "./routes/pdfToWordHealth";
+import { config } from "./config/environment.js";
+import { logger } from "./utils/logger.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import conversionRoutes from "./routes/conversion.js";
+import pdfToWordRoutes from "./routes/pdfToWordConversion.js";
+import healthRoutes from "./routes/health.js";
+import pdfToWordHealthRoutes from "./routes/pdfToWordHealth.js";
+
+// Import tool routes
+import imageCropRoutes from "./tools/image-crop/cropRoutes.js";
 
 const app = express();
 
@@ -47,9 +50,12 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
     exposedHeaders: [
       "X-Conversion-Time",
+      "X-Processing-Time",
       "X-Original-Size",
       "X-Converted-Size",
       "X-Output-Format",
+      "X-Original-Dimensions",
+      "X-Cropped-Dimensions",
       "Content-Disposition",
     ],
   })
@@ -69,11 +75,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes - Mount in correct order
-app.use("/api/health/pdf-to-word", pdfToWordHealthRoutes);
+// Routes
 app.use("/api/health", healthRoutes);
+app.use("/api/health/pdf-to-word", pdfToWordHealthRoutes);
 app.use("/api/convert", conversionRoutes);
 app.use("/api/convert", pdfToWordRoutes);
+
+// Tool routes
+app.use("/api/tools/image", imageCropRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -90,6 +99,8 @@ app.get("/", (req, res) => {
       pdfToWord: "/api/convert/pdf-to-word",
       batchWordToPdf: "/api/convert/batch/word-to-pdf",
       batchPdfToWord: "/api/convert/batch/pdf-to-word",
+      imageCrop: "/api/tools/image/crop-image",
+      imageToolsHealth: "/api/tools/image/health",
     },
   });
 });
@@ -107,6 +118,8 @@ app.get("/api", (req, res) => {
       "POST /api/convert/pdf-to-word - Convert PDF to Word",
       "POST /api/convert/batch/word-to-pdf - Batch Word to PDF",
       "POST /api/convert/batch/pdf-to-word - Batch PDF to Word",
+      "POST /api/tools/image/crop-image - Crop image",
+      "GET /api/tools/image/health - Image tools health",
     ],
   });
 });
@@ -141,6 +154,7 @@ const server = app.listen(config.port, () => {
   logger.info(`🚀 Doclair Converter Server running on port ${config.port}`);
   logger.info(`📝 Word to PDF conversion service ready`);
   logger.info(`📄 PDF to Word conversion service ready`);
+  logger.info(`🖼️ Image processing tools ready`);
   logger.info(`🔒 Privacy-first processing - no files stored`);
   logger.info(`🌍 Environment: ${config.nodeEnv}`);
   logger.info(`📊 CORS origins: ${config.corsOrigins.join(", ")}`);

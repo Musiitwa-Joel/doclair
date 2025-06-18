@@ -5,7 +5,7 @@ import { config } from "../config/environment";
 import { validateFile, sanitizeFilename } from "../utils/fileUtils";
 import { parseSettingsFromRequest } from "../utils/validation";
 import { logger } from "../utils/logger";
-import convertService from "../services/convertService";
+import pdfToWordService from "../services/pdfToWordService";
 import { asyncHandler, AppError } from "../middleware/errorHandler";
 import { validateFileUpload } from "../middleware/validation";
 import {
@@ -13,7 +13,7 @@ import {
   BatchConversionResult,
   BatchConversionError,
   BatchConversionResponse,
-} from "../types/index";
+} from "../types/index.js";
 
 const router = Router();
 
@@ -25,14 +25,10 @@ const upload = multer({
     files: config.maxFiles,
   },
   fileFilter: (req, file, cb) => {
-    const allowedMimes = [
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "application/vnd.ms-word",
-    ];
+    const allowedMimes = ["application/pdf"];
 
-    const allowedExtensions = [".doc", ".docx"];
-    const fileExtension = file.originalname.toLowerCase().slice(-5);
+    const allowedExtensions = [".pdf"];
+    const fileExtension = file.originalname.toLowerCase().slice(-4);
 
     if (
       allowedMimes.includes(file.mimetype) ||
@@ -40,20 +36,14 @@ const upload = multer({
     ) {
       cb(null, true);
     } else {
-      cb(
-        new AppError(
-          "Only Word documents (.doc, .docx) are allowed",
-          400,
-          "INVALID_FILE_TYPE"
-        )
-      );
+      cb(new AppError("Only PDF files are allowed", 400, "INVALID_FILE_TYPE"));
     }
   },
 });
 
 // Single file conversion endpoint
 router.post(
-  "/word-to-pdf",
+  "/pdf-to-word",
   upload.single("file"),
   validateFileUpload,
   asyncHandler(async (req: ConversionRequest, res) => {
@@ -69,21 +59,24 @@ router.post(
     const settings = parseSettingsFromRequest(req.body.settings);
 
     logger.info(
-      `Converting file: ${file.originalname}, Size: ${file.size} bytes`
+      `Converting PDF to Word: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     // Convert the file
-    const result = await convertService.convertWordToPdf(file.buffer, {
+    const result = await pdfToWordService.convertPdfToWord(file.buffer, {
       filename: file.originalname,
       settings,
     });
 
     // Set response headers for file download
     const sanitizedFilename = sanitizeFilename(
-      file.originalname.replace(/\.(doc|docx)$/i, ".pdf")
+      file.originalname.replace(/\.pdf$/i, ".docx")
     );
 
-    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
     res.setHeader(
       "Content-Disposition",
       `attachment; filename="${sanitizedFilename}"`
@@ -93,18 +86,18 @@ router.post(
     res.setHeader("X-Original-Size", file.size.toString());
     res.setHeader("X-Converted-Size", result.buffer.length.toString());
 
-    // Send the PDF buffer
+    // Send the Word document buffer
     res.send(result.buffer);
 
     logger.info(
-      `Conversion completed: ${sanitizedFilename}, Time: ${result.conversionTime}ms`
+      `PDF to Word conversion completed: ${sanitizedFilename}, Time: ${result.conversionTime}ms`
     );
   })
 );
 
 // Batch conversion endpoint with ZIP download
 router.post(
-  "/batch/word-to-pdf",
+  "/batch/pdf-to-word",
   upload.array("files", config.maxFiles),
   validateFileUpload,
   asyncHandler(async (req: ConversionRequest, res) => {
@@ -118,7 +111,7 @@ router.post(
     const results: BatchConversionResult[] = [];
     const errors: BatchConversionError[] = [];
 
-    logger.info(`Batch conversion started: ${files.length} files`);
+    logger.info(`Batch PDF to Word conversion started: ${files.length} files`);
 
     // Process files sequentially to avoid overwhelming the system
     for (let i = 0; i < files.length; i++) {
@@ -137,7 +130,7 @@ router.post(
         }
 
         // Convert the file
-        const result = await convertService.convertWordToPdf(file.buffer, {
+        const result = await pdfToWordService.convertPdfToWord(file.buffer, {
           filename: file.originalname,
           settings,
         });
@@ -145,16 +138,16 @@ router.post(
         results.push({
           originalFilename: file.originalname,
           convertedFilename: sanitizeFilename(
-            file.originalname.replace(/\.(doc|docx)$/i, ".pdf")
+            file.originalname.replace(/\.pdf$/i, ".docx")
           ),
           originalSize: file.size,
           convertedSize: result.buffer.length,
           conversionTime: result.conversionTime,
-          buffer: result.buffer, // Keep as Buffer for ZIP creation
+          buffer: result.buffer,
           index: i,
         });
       } catch (error) {
-        logger.error(`Error converting file ${file.originalname}:`, error);
+        logger.error(`Error converting PDF file ${file.originalname}:`, error);
         errors.push({
           filename: file.originalname,
           error: error instanceof Error ? error.message : "Unknown error",
@@ -169,7 +162,7 @@ router.post(
         success: false,
         totalFiles: files.length,
         successfulConversions: 0,
-        errors: errors.length,
+        errorCount: errors.length,
         results: [],
         errors,
       };
@@ -182,7 +175,7 @@ router.post(
       .toISOString()
       .replace(/[:.]/g, "-")
       .slice(0, 19);
-    const zipFilename = `converted_pdfs_${timestamp}.zip`;
+    const zipFilename = `converted_word_docs_${timestamp}.zip`;
 
     // Set headers for ZIP download
     res.setHeader("Content-Type", "application/zip");
@@ -210,7 +203,7 @@ router.post(
     // Pipe archive to response
     archive.pipe(res);
 
-    // Add converted PDF files to archive
+    // Add converted Word files to archive
     for (const result of results) {
       archive.append(result.buffer, { name: result.convertedFilename });
       logger.info(`Added to ZIP: ${result.convertedFilename}`);
@@ -219,8 +212,8 @@ router.post(
     // Add conversion report if there were any errors
     if (errors.length > 0) {
       const reportContent = [
-        "Conversion Report",
-        "=================",
+        "PDF to Word Conversion Report",
+        "=============================",
         "",
         `Total files: ${files.length}`,
         `Successfully converted: ${results.length}`,
@@ -248,7 +241,7 @@ router.post(
     await archive.finalize();
 
     logger.info(
-      `Batch conversion completed: ${results.length}/${files.length} successful, ZIP created: ${zipFilename}`
+      `Batch PDF to Word conversion completed: ${results.length}/${files.length} successful, ZIP created: ${zipFilename}`
     );
   })
 );

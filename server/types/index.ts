@@ -49,6 +49,7 @@ export interface BatchConversionResponse {
   success: boolean;
   totalFiles: number;
   successfulConversions: number;
+  errorCount: number;
   results: BatchConversionResult[];
   errors: BatchConversionError[];
 }
