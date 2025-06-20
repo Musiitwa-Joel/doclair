@@ -24,6 +24,9 @@ import imageRestoreRoutes from "./tools/image-restore/restoreRoutes.js";
 import imageUnblurRoutes from "./tools/image-unblur/unblurRoutes.js";
 import imageScratchRemoveRoutes from "./tools/image-scratch-remove/scratchRemoveRoutes.js";
 import imageColorRestoreRoutes from "./tools/image-color-restore/colorRestoreRoutes.js";
+import imageArtisticFiltersRoutes from "./tools/image-artistic-filters/artisticFiltersRoutes.js";
+import imageVintageEffectsRoutes from "./tools/image-vintage-effects/vintageEffectsRoutes.js";
+import imageHdrEffectsRoutes from "./tools/image-hdr-effects/hdrEffectsRoutes.js";
 
 const app = express();
 
@@ -86,6 +89,16 @@ app.use(
       "X-Clarity-Score",
       "X-Scratch-Count",
       "X-Repair-Score",
+      "X-Filter-Applied",
+      "X-Effect-Intensity",
+      "X-Artistic-Score",
+      "X-Vintage-Style",
+      "X-Film-Grain",
+      "X-Color-Shift",
+      "X-Vignette",
+      "X-HDR-Style",
+      "X-Tone-Mapping",
+      "X-Dynamic-Range",
       "Content-Disposition",
     ],
   })
@@ -125,6 +138,9 @@ app.use("/api/tools/image", imageRestoreRoutes);
 app.use("/api/tools/image", imageUnblurRoutes);
 app.use("/api/tools/image", imageScratchRemoveRoutes);
 app.use("/api/tools/image", imageColorRestoreRoutes);
+app.use("/api/tools/image", imageArtisticFiltersRoutes);
+app.use("/api/tools/image", imageVintageEffectsRoutes);
+app.use("/api/tools/image", imageHdrEffectsRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -154,6 +170,9 @@ app.get("/", (req, res) => {
       imageUnblur: "/api/tools/image/unblur-image",
       imageScratchRemove: "/api/tools/image/remove-scratches",
       imageColorRestore: "/api/tools/image/restore-colors",
+      imageArtisticFilter: "/api/tools/image/artistic-filter",
+      imageVintageEffect: "/api/tools/image/vintage-effect",
+      imageHdrEffect: "/api/tools/image/hdr-effect",
       imageToolsHealth: "/api/tools/image/health",
     },
   });
@@ -185,6 +204,9 @@ app.get("/api", (req, res) => {
       "POST /api/tools/image/unblur-image - Unblur and sharpen images",
       "POST /api/tools/image/remove-scratches - Remove scratches and dust",
       "POST /api/tools/image/restore-colors - Restore faded colors",
+      "POST /api/tools/image/artistic-filter - Apply artistic filters",
+      "POST /api/tools/image/vintage-effect - Apply vintage film effects",
+      "POST /api/tools/image/hdr-effect - Apply HDR effects",
       "GET /api/tools/image/health - Image tools health",
     ],
   });
@@ -233,6 +255,9 @@ const server = app.listen(config.port, () => {
   logger.info(`🔎 Image unblur tool ready`);
   logger.info(`🧹 Scratch & dust removal tool ready`);
   logger.info(`🎭 Color restoration tool ready`);
+  logger.info(`🎨 Artistic filters tool ready`);
+  logger.info(`🎞️ Vintage effects tool ready`);
+  logger.info(`🌈 HDR effects tool ready`);
   logger.info(`🔒 Privacy-first processing - no files stored`);
   logger.info(`🌍 Environment: ${config.nodeEnv}`);
   logger.info(`📊 CORS origins: ${config.corsOrigins.join(", ")}`);
