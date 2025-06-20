@@ -1,10 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { config } from "../../config/environment.js";
-import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
-import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
-import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
+import { config } from "../../config/environment";
+import { validateFile, sanitizeFilename } from "../../utils/fileUtils";
+import { logger } from "../../utils/logger";
+import colorRestoreService from "./colorRestoreService";
+import { asyncHandler, AppError } from "../../middleware/errorHandler";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for color restoration
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -22,9 +22,18 @@ const upload = multer({
       "image/png",
       "image/webp",
       "image/gif",
+      "image/tiff",
     ];
 
-    const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+    const allowedExtensions = [
+      ".jpg",
+      ".jpeg",
+      ".png",
+      ".webp",
+      ".gif",
+      ".tiff",
+      ".tif",
+    ];
     const fileExtension = file.originalname.toLowerCase().slice(-5);
 
     if (
@@ -35,7 +44,7 @@ const upload = multer({
     } else {
       cb(
         new AppError(
-          "Only image files (JPG, PNG, WebP, GIF) are allowed",
+          "Only image files (JPG, PNG, WebP, GIF, TIFF) are allowed",
           400,
           "INVALID_FILE_TYPE"
         )
@@ -53,15 +62,17 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image color restoration endpoint
 router.post(
-  "/crop-image",
+  "/restore-colors",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(
+      `🎨 Received color restoration request for: ${file.originalname}`
+    );
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,39 +82,43 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse restoration options
+    let restoreOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      restoreOptions = JSON.parse(req.body.restoreOptions || "{}");
+      logger.info(
+        `🎨 Color restoration options: ${JSON.stringify(restoreOptions)}`
+      );
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(
+        `❌ Failed to parse color restoration options: ${parseError}`
+      );
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid color restoration options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_RESTORE_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `🎨 Starting color restoration for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Restore colors
+      const result = await colorRestoreService.restoreColors(
         file.buffer,
         file.originalname,
-        cropOptions
+        restoreOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = restoreOptions.outputFormat || "jpg";
       const sanitizedFilename = sanitizeFilename(
-        file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
+        `colorized_${file.originalname.replace(
+          /\.[^/.]+$/,
+          `.${outputFormat}`
+        )}`
       );
 
       // Set response headers
@@ -114,7 +129,7 @@ router.post(
         webp: "image/webp",
       };
 
-      res.setHeader("Content-Type", mimeTypes[outputFormat] || "image/png");
+      res.setHeader("Content-Type", mimeTypes[outputFormat] || "image/jpeg");
       res.setHeader(
         "Content-Disposition",
         `attachment; filename="${sanitizedFilename}"`
@@ -126,42 +141,52 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Processed-Dimensions",
+        `${result.processedDimensions.width}x${result.processedDimensions.height}`
       );
+      res.setHeader("X-Enhancements", result.enhancements.join(", "));
+      res.setHeader("X-Restoration-Score", result.restorationScore.toString());
 
-      // Send the cropped image buffer
+      // Send the processed image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Color restoration completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(`🎨 Applied techniques: ${result.enhancements.join(", ")}`);
+    } catch (processingError) {
+      logger.error(`❌ Color restoration failed: ${processingError}`);
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Color restoration failed: ${
+          processingError instanceof Error
+            ? processingError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "COLOR_RESTORATION_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for color restoration tool
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-color-restore",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "Faded color restoration",
+        "Color balance correction",
+        "Vibrancy enhancement",
+        "Yellowing removal",
+        "Color cast correction",
+        "Vintage photo restoration",
+        "Multiple restoration modes",
         "Multiple output formats",
-        "Aspect ratio preservation",
         "Quality control",
       ],
     });

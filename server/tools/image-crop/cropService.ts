@@ -61,13 +61,13 @@ class ImageCropService {
         throw new Error("Invalid image format - not a supported image file");
       }
 
-      // Get actual image dimensions
+      // Get actual image dimensions FIRST
       const originalDimensions = await this.getImageDimensions(imageBuffer);
       logger.info(
         `📐 Original dimensions: ${originalDimensions.width}x${originalDimensions.height}`
       );
 
-      // Validate crop options against actual dimensions
+      // Now validate crop options against actual dimensions
       const validation = this.validateCropOptions(
         cropOptions,
         originalDimensions.width,
@@ -131,6 +131,21 @@ class ImageCropService {
     buffer: Buffer
   ): Promise<{ width: number; height: number }> {
     try {
+      // Try Sharp first if available
+      try {
+        const sharp = await import("sharp");
+        const metadata = await sharp.default(buffer).metadata();
+        if (metadata.width && metadata.height) {
+          logger.info(
+            `📐 Sharp extracted dimensions: ${metadata.width}x${metadata.height}`
+          );
+          return { width: metadata.width, height: metadata.height };
+        }
+      } catch (sharpError) {
+        logger.debug("Sharp not available, trying manual extraction");
+      }
+
+      // Fallback to manual extraction
       if (this.isPNG(buffer)) {
         return this.getPNGDimensions(buffer);
       } else if (this.isJPEG(buffer)) {
@@ -144,12 +159,13 @@ class ImageCropService {
       logger.warn("⚠️ Could not extract image dimensions:", error);
     }
 
-    // Fallback: use Canvas API to get dimensions
+    // Final fallback: use Canvas API to get dimensions
     return this.getDimensionsWithCanvas(buffer);
   }
 
   private isPNG(buffer: Buffer): boolean {
     return (
+      buffer.length >= 8 &&
       buffer[0] === 0x89 &&
       buffer[1] === 0x50 &&
       buffer[2] === 0x4e &&
@@ -158,11 +174,17 @@ class ImageCropService {
   }
 
   private isJPEG(buffer: Buffer): boolean {
-    return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+    return (
+      buffer.length >= 3 &&
+      buffer[0] === 0xff &&
+      buffer[1] === 0xd8 &&
+      buffer[2] === 0xff
+    );
   }
 
   private isWebP(buffer: Buffer): boolean {
     return (
+      buffer.length >= 12 &&
       buffer[0] === 0x52 &&
       buffer[1] === 0x49 &&
       buffer[2] === 0x46 &&
@@ -175,13 +197,22 @@ class ImageCropService {
   }
 
   private isGIF(buffer: Buffer): boolean {
-    return buffer[0] === 0x47 && buffer[1] === 0x49 && buffer[2] === 0x46;
+    return (
+      buffer.length >= 6 &&
+      buffer[0] === 0x47 &&
+      buffer[1] === 0x49 &&
+      buffer[2] === 0x46
+    );
   }
 
   private getPNGDimensions(buffer: Buffer): { width: number; height: number } {
+    if (buffer.length < 24) {
+      throw new Error("PNG buffer too small to contain dimensions");
+    }
     // PNG dimensions are stored at bytes 16-23 (width) and 20-23 (height)
     const width = buffer.readUInt32BE(16);
     const height = buffer.readUInt32BE(20);
+    logger.info(`📐 PNG dimensions extracted: ${width}x${height}`);
     return { width, height };
   }
 
@@ -189,7 +220,7 @@ class ImageCropService {
     // JPEG dimension extraction is complex, we'll use a simplified approach
     let offset = 2; // Skip SOI marker
 
-    while (offset < buffer.length) {
+    while (offset < buffer.length - 1) {
       // Find next marker
       if (buffer[offset] !== 0xff) {
         offset++;
@@ -205,14 +236,21 @@ class ImageCropService {
         (marker >= 0xc9 && marker <= 0xcb) ||
         (marker >= 0xcd && marker <= 0xcf)
       ) {
-        const height = buffer.readUInt16BE(offset + 5);
-        const width = buffer.readUInt16BE(offset + 7);
-        return { width, height };
+        if (offset + 9 < buffer.length) {
+          const height = buffer.readUInt16BE(offset + 5);
+          const width = buffer.readUInt16BE(offset + 7);
+          logger.info(`📐 JPEG dimensions extracted: ${width}x${height}`);
+          return { width, height };
+        }
       }
 
       // Skip this segment
-      const segmentLength = buffer.readUInt16BE(offset + 2);
-      offset += 2 + segmentLength;
+      if (offset + 3 < buffer.length) {
+        const segmentLength = buffer.readUInt16BE(offset + 2);
+        offset += 2 + segmentLength;
+      } else {
+        break;
+      }
     }
 
     throw new Error("Could not find JPEG dimensions");
@@ -220,9 +258,15 @@ class ImageCropService {
 
   private getWebPDimensions(buffer: Buffer): { width: number; height: number } {
     // WebP VP8 format
-    if (buffer[12] === 0x56 && buffer[13] === 0x50 && buffer[14] === 0x38) {
+    if (
+      buffer.length >= 30 &&
+      buffer[12] === 0x56 &&
+      buffer[13] === 0x50 &&
+      buffer[14] === 0x38
+    ) {
       const width = buffer.readUInt16LE(26) & 0x3fff;
       const height = buffer.readUInt16LE(28) & 0x3fff;
+      logger.info(`📐 WebP dimensions extracted: ${width}x${height}`);
       return { width, height };
     }
 
@@ -230,21 +274,37 @@ class ImageCropService {
   }
 
   private getGIFDimensions(buffer: Buffer): { width: number; height: number } {
+    if (buffer.length < 10) {
+      throw new Error("GIF buffer too small to contain dimensions");
+    }
     // GIF dimensions are at bytes 6-9
     const width = buffer.readUInt16LE(6);
     const height = buffer.readUInt16LE(8);
+    logger.info(`📐 GIF dimensions extracted: ${width}x${height}`);
     return { width, height };
   }
 
   private async getDimensionsWithCanvas(
     buffer: Buffer
   ): Promise<{ width: number; height: number }> {
-    // This is a fallback method - in a real implementation you might use Sharp or similar
-    // For now, return reasonable defaults
-    logger.warn(
-      "⚠️ Using fallback dimensions - consider installing Sharp for better image processing"
-    );
-    return { width: 1920, height: 1080 };
+    try {
+      // Try to import Canvas dynamically
+      const { createCanvas, loadImage } = await import("canvas");
+
+      // Load image from buffer to get dimensions
+      const image = await loadImage(buffer);
+      const dimensions = { width: image.width, height: image.height };
+      logger.info(
+        `📐 Canvas extracted dimensions: ${dimensions.width}x${dimensions.height}`
+      );
+      return dimensions;
+    } catch (canvasError) {
+      logger.warn("⚠️ Canvas API not available for dimension extraction");
+      // This is a fallback - in production you should have Sharp or Canvas available
+      throw new Error(
+        "Could not determine image dimensions - please install Sharp or Canvas"
+      );
+    }
   }
 
   private async performCrop(
@@ -287,10 +347,10 @@ class ImageCropService {
       const sharp = await import("sharp");
 
       let pipeline = sharp.default(imageBuffer).extract({
-        left: Math.round(cropOptions.x),
-        top: Math.round(cropOptions.y),
-        width: Math.round(cropOptions.width),
-        height: Math.round(cropOptions.height),
+        left: Math.round(Math.max(0, cropOptions.x)),
+        top: Math.round(Math.max(0, cropOptions.y)),
+        width: Math.round(Math.max(1, cropOptions.width)),
+        height: Math.round(Math.max(1, cropOptions.height)),
       });
 
       // Apply output format and quality
@@ -328,8 +388,8 @@ class ImageCropService {
 
       // Create canvas with crop dimensions
       const canvas = createCanvas(
-        Math.round(cropOptions.width),
-        Math.round(cropOptions.height)
+        Math.round(Math.max(1, cropOptions.width)),
+        Math.round(Math.max(1, cropOptions.height))
       );
       const ctx = canvas.getContext("2d");
 
@@ -339,14 +399,14 @@ class ImageCropService {
       // Draw the cropped portion
       ctx.drawImage(
         image,
-        Math.round(cropOptions.x),
-        Math.round(cropOptions.y), // Source x, y
-        Math.round(cropOptions.width),
-        Math.round(cropOptions.height), // Source width, height
+        Math.round(Math.max(0, cropOptions.x)),
+        Math.round(Math.max(0, cropOptions.y)), // Source x, y
+        Math.round(Math.max(1, cropOptions.width)),
+        Math.round(Math.max(1, cropOptions.height)), // Source width, height
         0,
         0, // Destination x, y
-        Math.round(cropOptions.width),
-        Math.round(cropOptions.height) // Destination width, height
+        Math.round(Math.max(1, cropOptions.width)),
+        Math.round(Math.max(1, cropOptions.height)) // Destination width, height
       );
 
       // Convert to buffer
@@ -432,23 +492,33 @@ class ImageCropService {
       if (cropOptions.x >= imageWidth) {
         return {
           isValid: false,
-          error: "Crop X coordinate exceeds image width",
+          error: `Crop X coordinate (${cropOptions.x}) exceeds image width (${imageWidth})`,
         };
       }
 
       if (cropOptions.y >= imageHeight) {
         return {
           isValid: false,
-          error: "Crop Y coordinate exceeds image height",
+          error: `Crop Y coordinate (${cropOptions.y}) exceeds image height (${imageHeight})`,
         };
       }
 
       if (cropOptions.x + cropOptions.width > imageWidth) {
-        return { isValid: false, error: "Crop area exceeds image width" };
+        return {
+          isValid: false,
+          error: `Crop area (${
+            cropOptions.x + cropOptions.width
+          }) exceeds image width (${imageWidth})`,
+        };
       }
 
       if (cropOptions.y + cropOptions.height > imageHeight) {
-        return { isValid: false, error: "Crop area exceeds image height" };
+        return {
+          isValid: false,
+          error: `Crop area (${
+            cropOptions.y + cropOptions.height
+          }) exceeds image height (${imageHeight})`,
+        };
       }
     }
 

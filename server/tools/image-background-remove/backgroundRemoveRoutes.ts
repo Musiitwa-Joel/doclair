@@ -1,10 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { config } from "../../config/environment.js";
-import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
-import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
-import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
+import { config } from "../../config/environment";
+import { validateFile, sanitizeFilename } from "../../utils/fileUtils";
+import { logger } from "../../utils/logger";
+import backgroundRemoveService from "./backgroundRemoveService";
+import { asyncHandler, AppError } from "../../middleware/errorHandler";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for background removal
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -53,15 +53,17 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image background removal endpoint
 router.post(
-  "/crop-image",
+  "/remove-background",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(
+      `🖼️ Received background removal request for: ${file.originalname}`
+    );
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,39 +73,36 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse removal options
+    let removalOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      removalOptions = JSON.parse(req.body.removalOptions || "{}");
+      logger.info(`🔧 Removal options: ${JSON.stringify(removalOptions)}`);
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(`❌ Failed to parse removal options: ${parseError}`);
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid removal options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_REMOVAL_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `🖼️ Starting background removal for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Remove background
+      const result = await backgroundRemoveService.removeBackground(
         file.buffer,
         file.originalname,
-        cropOptions
+        removalOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = removalOptions.outputFormat || "png";
       const sanitizedFilename = sanitizeFilename(
-        file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
+        `nobg_${file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)}`
       );
 
       // Set response headers
@@ -126,43 +125,62 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Processed-Dimensions",
+        `${result.processedDimensions.width}x${result.processedDimensions.height}`
       );
+      res.setHeader(
+        "X-Transparency-Score",
+        result.transparencyScore.toString()
+      );
+      res.setHeader("X-Edge-Quality-Score", result.edgeQualityScore.toString());
 
-      // Send the cropped image buffer
+      // Send the processed image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Background removal completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(
+        `📊 Dimensions: ${result.originalDimensions.width}x${result.originalDimensions.height}`
+      );
+      logger.info(
+        `🔍 Quality: Transparency=${result.transparencyScore.toFixed(
+          1
+        )}, Edges=${result.edgeQualityScore.toFixed(1)}`
+      );
+    } catch (processingError) {
+      logger.error(`❌ Background removal failed: ${processingError}`);
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Background removal failed: ${
+          processingError instanceof Error
+            ? processingError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "BACKGROUND_REMOVAL_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for background removal tool
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-background-remove",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "AI-powered background removal",
+        "Edge refinement technology",
+        "Hair and fine detail preservation",
+        "Transparent background output",
+        "Custom background colors",
         "Multiple output formats",
-        "Aspect ratio preservation",
         "Quality control",
+        "Live preview",
       ],
     });
   })

@@ -12,6 +12,18 @@ import pdfToWordHealthRoutes from "./routes/pdfToWordHealth.js";
 
 // Import tool routes
 import imageCropRoutes from "./tools/image-crop/cropRoutes.js";
+import imageResizeRoutes from "./tools/image-resize/resizeRoutes.js";
+import imageRotateFlipRoutes from "./tools/image-rotate-flip/rotateFlipRoutes.js";
+import imageBrightnessContrastRoutes from "./tools/image-brightness-contrast/brightnessContrastRoutes.js";
+import imageColorBalanceRoutes from "./tools/image-color-balance/colorBalanceRoutes.js";
+import imageSharpenBlurRoutes from "./tools/image-sharpen-blur/sharpenBlurRoutes.js";
+import imageAutoEnhanceRoutes from "./tools/image-auto-enhance/autoEnhanceRoutes.js";
+import imagePerspectiveCorrectRoutes from "./tools/image-perspective-correct/perspectiveCorrectRoutes.js";
+import imageBackgroundRemoveRoutes from "./tools/image-background-remove/backgroundRemoveRoutes.js";
+import imageRestoreRoutes from "./tools/image-restore/restoreRoutes.js";
+import imageUnblurRoutes from "./tools/image-unblur/unblurRoutes.js";
+import imageScratchRemoveRoutes from "./tools/image-scratch-remove/scratchRemoveRoutes.js";
+import imageColorRestoreRoutes from "./tools/image-color-restore/colorRestoreRoutes.js";
 
 const app = express();
 
@@ -56,6 +68,24 @@ app.use(
       "X-Output-Format",
       "X-Original-Dimensions",
       "X-Cropped-Dimensions",
+      "X-Resized-Dimensions",
+      "X-Processed-Dimensions",
+      "X-Corrected-Dimensions",
+      "X-Compression-Ratio",
+      "X-AI-Upscaled",
+      "X-Operations",
+      "X-Image-Count",
+      "X-Adjustments",
+      "X-Enhancements",
+      "X-Quality-Score",
+      "X-Correction-Angle",
+      "X-Keystone-Correction",
+      "X-Transparency-Score",
+      "X-Edge-Quality-Score",
+      "X-Restoration-Score",
+      "X-Clarity-Score",
+      "X-Scratch-Count",
+      "X-Repair-Score",
       "Content-Disposition",
     ],
   })
@@ -83,6 +113,18 @@ app.use("/api/convert", pdfToWordRoutes);
 
 // Tool routes
 app.use("/api/tools/image", imageCropRoutes);
+app.use("/api/tools/image", imageResizeRoutes);
+app.use("/api/tools/image", imageRotateFlipRoutes);
+app.use("/api/tools/image", imageBrightnessContrastRoutes);
+app.use("/api/tools/image", imageColorBalanceRoutes);
+app.use("/api/tools/image", imageSharpenBlurRoutes);
+app.use("/api/tools/image", imageAutoEnhanceRoutes);
+app.use("/api/tools/image", imagePerspectiveCorrectRoutes);
+app.use("/api/tools/image", imageBackgroundRemoveRoutes);
+app.use("/api/tools/image", imageRestoreRoutes);
+app.use("/api/tools/image", imageUnblurRoutes);
+app.use("/api/tools/image", imageScratchRemoveRoutes);
+app.use("/api/tools/image", imageColorRestoreRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -100,6 +142,18 @@ app.get("/", (req, res) => {
       batchWordToPdf: "/api/convert/batch/word-to-pdf",
       batchPdfToWord: "/api/convert/batch/pdf-to-word",
       imageCrop: "/api/tools/image/crop-image",
+      imageResize: "/api/tools/image/resize-image",
+      imageRotateFlip: "/api/tools/image/rotate-flip-image",
+      imageBrightnessContrast: "/api/tools/image/brightness-contrast",
+      imageColorBalance: "/api/tools/image/color-balance",
+      imageSharpenBlur: "/api/tools/image/sharpen-blur",
+      imageAutoEnhance: "/api/tools/image/auto-enhance",
+      imagePerspectiveCorrect: "/api/tools/image/perspective-correct",
+      imageBackgroundRemove: "/api/tools/image/remove-background",
+      imageRestore: "/api/tools/image/restore-photo",
+      imageUnblur: "/api/tools/image/unblur-image",
+      imageScratchRemove: "/api/tools/image/remove-scratches",
+      imageColorRestore: "/api/tools/image/restore-colors",
       imageToolsHealth: "/api/tools/image/health",
     },
   });
@@ -119,6 +173,18 @@ app.get("/api", (req, res) => {
       "POST /api/convert/batch/word-to-pdf - Batch Word to PDF",
       "POST /api/convert/batch/pdf-to-word - Batch PDF to Word",
       "POST /api/tools/image/crop-image - Crop image",
+      "POST /api/tools/image/resize-image - Resize image with AI upscaling",
+      "POST /api/tools/image/rotate-flip-image - Rotate, flip & combine images",
+      "POST /api/tools/image/brightness-contrast - Adjust brightness & contrast",
+      "POST /api/tools/image/color-balance - Color balance & temperature",
+      "POST /api/tools/image/sharpen-blur - Sharpen & blur effects",
+      "POST /api/tools/image/auto-enhance - One-click image enhancement",
+      "POST /api/tools/image/perspective-correct - Fix perspective distortion",
+      "POST /api/tools/image/remove-background - Remove image backgrounds",
+      "POST /api/tools/image/restore-photo - Restore old photos",
+      "POST /api/tools/image/unblur-image - Unblur and sharpen images",
+      "POST /api/tools/image/remove-scratches - Remove scratches and dust",
+      "POST /api/tools/image/restore-colors - Restore faded colors",
       "GET /api/tools/image/health - Image tools health",
     ],
   });
@@ -154,7 +220,19 @@ const server = app.listen(config.port, () => {
   logger.info(`🚀 Doclair Converter Server running on port ${config.port}`);
   logger.info(`📝 Word to PDF conversion service ready`);
   logger.info(`📄 PDF to Word conversion service ready`);
-  logger.info(`🖼️ Image processing tools ready`);
+  logger.info(`✂️ Image crop tool ready`);
+  logger.info(`📏 Image resize tool with AI upscaling ready`);
+  logger.info(`🔄 Image rotate & flip tool with multi-image support ready`);
+  logger.info(`🌟 Image brightness & contrast tool ready`);
+  logger.info(`🎨 Image color balance tool ready`);
+  logger.info(`🔍 Image sharpen & blur tool ready`);
+  logger.info(`✨ Image auto enhance tool ready`);
+  logger.info(`📐 Image perspective correction tool ready`);
+  logger.info(`🖼️ Image background removal tool ready`);
+  logger.info(`🏞️ Old photo restoration tool ready`);
+  logger.info(`🔎 Image unblur tool ready`);
+  logger.info(`🧹 Scratch & dust removal tool ready`);
+  logger.info(`🎭 Color restoration tool ready`);
   logger.info(`🔒 Privacy-first processing - no files stored`);
   logger.info(`🌍 Environment: ${config.nodeEnv}`);
   logger.info(`📊 CORS origins: ${config.corsOrigins.join(", ")}`);

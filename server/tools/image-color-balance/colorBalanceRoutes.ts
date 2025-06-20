@@ -1,10 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { config } from "../../config/environment.js";
-import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
-import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
-import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
+import { config } from "../../config/environment";
+import { validateFile, sanitizeFilename } from "../../utils/fileUtils";
+import { logger } from "../../utils/logger";
+import colorBalanceService from "./colorBalanceService";
+import { asyncHandler, AppError } from "../../middleware/errorHandler";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for color balance
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -53,15 +53,15 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image color balance endpoint
 router.post(
-  "/crop-image",
+  "/color-balance",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(`🎨 Received color balance request for: ${file.originalname}`);
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,37 +71,36 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse color balance options
+    let colorBalanceOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      colorBalanceOptions = JSON.parse(req.body.colorBalanceOptions || "{}");
+      logger.info(
+        `🎨 Color balance options: ${JSON.stringify(colorBalanceOptions)}`
+      );
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(`❌ Failed to parse color balance options: ${parseError}`);
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid color balance options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_COLOR_BALANCE_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `🎨 Starting color balance for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Process the image
+      const result = await colorBalanceService.processColorBalance(
         file.buffer,
         file.originalname,
-        cropOptions
+        colorBalanceOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = colorBalanceOptions.outputFormat || "png";
       const sanitizedFilename = sanitizeFilename(
         file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
       );
@@ -126,42 +125,52 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Processed-Dimensions",
+        `${result.processedDimensions.width}x${result.processedDimensions.height}`
       );
+      res.setHeader("X-Adjustments", result.adjustments.join(", "));
 
-      // Send the cropped image buffer
+      // Send the processed image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Color balance completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(`🎨 Applied adjustments: ${result.adjustments.join(", ")}`);
+    } catch (processingError) {
+      logger.error(`❌ Color balance processing failed: ${processingError}`);
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Color balance processing failed: ${
+          processingError instanceof Error
+            ? processingError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "COLOR_BALANCE_PROCESSING_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for color balance tools
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-color-balance",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "Color temperature adjustment",
+        "Tint control (green/magenta)",
+        "Saturation and vibrance",
+        "Hue shifting",
+        "RGB channel balance",
+        "Tone-based color grading",
+        "Auto white balance",
+        "Auto color correction",
         "Multiple output formats",
-        "Aspect ratio preservation",
         "Quality control",
       ],
     });

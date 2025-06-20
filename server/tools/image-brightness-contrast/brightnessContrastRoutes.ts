@@ -1,10 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { config } from "../../config/environment.js";
-import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
-import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
-import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
+import { config } from "../../config/environment";
+import { validateFile, sanitizeFilename } from "../../utils/fileUtils";
+import { logger } from "../../utils/logger";
+import brightnessContrastService from "./brightnessContrastService";
+import { asyncHandler, AppError } from "../../middleware/errorHandler";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for brightness/contrast adjustment
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -53,15 +53,17 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image brightness/contrast adjustment endpoint
 router.post(
-  "/crop-image",
+  "/brightness-contrast",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(
+      `🌟 Received brightness/contrast request for: ${file.originalname}`
+    );
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,37 +73,36 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse adjustment options
+    let adjustmentOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      adjustmentOptions = JSON.parse(req.body.adjustmentOptions || "{}");
+      logger.info(
+        `🎨 Adjustment options: ${JSON.stringify(adjustmentOptions)}`
+      );
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(`❌ Failed to parse adjustment options: ${parseError}`);
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid adjustment options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_ADJUSTMENT_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `🌟 Starting brightness/contrast adjustment for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Adjust the image
+      const result = await brightnessContrastService.adjustImage(
         file.buffer,
         file.originalname,
-        cropOptions
+        adjustmentOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = adjustmentOptions.outputFormat || "png";
       const sanitizedFilename = sanitizeFilename(
         file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
       );
@@ -126,42 +127,55 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Processed-Dimensions",
+        `${result.processedDimensions.width}x${result.processedDimensions.height}`
       );
+      res.setHeader("X-Adjustments", result.adjustments.join(", "));
 
-      // Send the cropped image buffer
+      // Send the adjusted image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Brightness/contrast adjustment completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(`🎨 Applied adjustments: ${result.adjustments.join(", ")}`);
+    } catch (adjustmentError) {
+      logger.error(
+        `❌ Brightness/contrast adjustment failed: ${adjustmentError}`
+      );
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Brightness/contrast adjustment failed: ${
+          adjustmentError instanceof Error
+            ? adjustmentError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "BRIGHTNESS_CONTRAST_PROCESSING_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for brightness/contrast tools
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-brightness-contrast",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "Brightness adjustment (-100 to +100)",
+        "Contrast adjustment (-100 to +100)",
+        "Exposure control (-2 to +2 EV)",
+        "Highlights and shadows",
+        "Gamma correction (0.1 to 3.0)",
+        "Saturation and vibrance",
+        "Color temperature and tint",
+        "Auto levels, contrast, and color",
+        "Real-time histogram",
         "Multiple output formats",
-        "Aspect ratio preservation",
         "Quality control",
       ],
     });

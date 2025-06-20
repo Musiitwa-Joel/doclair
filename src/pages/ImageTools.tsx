@@ -1,21 +1,21 @@
-import React from 'react';
-import { Helmet } from 'react-helmet-async';
-import { Link } from 'react-router-dom';
-import { 
-  Image, 
-  Scissors, 
-  Palette, 
-  RefreshCw, 
-  Eraser, 
-  Brush, 
-  Crop, 
-  Maximize as Resize, 
-  Sparkles, 
-  Filter, 
-  Eye, 
-  Download, 
-  Grid, 
-  Type, 
+import React from "react";
+import { Helmet } from "react-helmet-async";
+import { Link } from "react-router-dom";
+import {
+  Image,
+  Scissors,
+  Palette,
+  RefreshCw,
+  Eraser,
+  Brush,
+  Crop,
+  Maximize as Resize,
+  Sparkles,
+  Filter,
+  Eye,
+  Download,
+  Grid,
+  Type,
   Zap,
   Camera,
   Layers,
@@ -1796,233 +1796,708 @@ import {
   Sign as SignIcon,
   Symbol as SymbolFinal,
   Icon as IconFinal,
-  Image as ImageUltimate
-} from 'lucide-react';
+  Image as ImageUltimate,
+} from "lucide-react";
 
 const ImageTools: React.FC = () => {
   const toolCategories = [
     {
-      title: 'Basic Editing',
+      title: "Basic Editing",
       icon: Scissors,
-      color: 'green',
-      description: 'Essential image editing tools for everyday use',
+      color: "green",
+      description: "Essential image editing tools for everyday use",
       tools: [
-        { name: 'Crop Image', path: '/en-US/tool/image-crop', icon: Crop, description: 'Crop images to custom or preset sizes with precision guides' },
-        { name: 'Resize Image', path: '/en-US/tool/image-resize', icon: Resize, description: 'Resize images while maintaining quality with AI upscaling' },
-        { name: 'Rotate & Flip', path: '/en-US/tool/image-rotate', icon: RotateCw, description: 'Rotate and flip images with custom angle controls' },
-        { name: 'Brightness & Contrast', path: '/en-US/tool/image-adjust', icon: Sun, description: 'Adjust brightness, contrast, and exposure levels' },
-        { name: 'Color Balance', path: '/en-US/tool/color-balance', icon: Palette, description: 'Fine-tune color temperature and saturation' },
-        { name: 'Sharpen & Blur', path: '/en-US/tool/image-filter', icon: Focus, description: 'Apply sharpening or blur effects with precision' },
-        { name: 'Auto Enhance', path: '/en-US/tool/auto-enhance', icon: Wand2, description: 'One-click automatic image enhancement' },
-        { name: 'Perspective Correct', path: '/en-US/tool/perspective-correct', icon: Move, description: 'Fix perspective distortion and keystone effects' }
-      ]
+        {
+          name: "Crop Image",
+          path: "/en-US/tool/image-crop",
+          icon: Crop,
+          description:
+            "Crop images to custom or preset sizes with precision guides",
+        },
+        {
+          name: "Resize Image",
+          path: "/en-US/tool/image-resize",
+          icon: Resize,
+          description:
+            "Resize images while maintaining quality with AI upscaling",
+        },
+        {
+          name: "Rotate & Flip",
+          path: "/en-US/tool/image-rotate",
+          icon: RotateCw,
+          description: "Rotate and flip images with custom angle controls",
+        },
+        {
+          name: "Brightness & Contrast",
+          path: "/en-US/tool/image-adjust",
+          icon: Sun,
+          description: "Adjust brightness, contrast, and exposure levels",
+        },
+        {
+          name: "Color Balance",
+          path: "/en-US/tool/color-balance",
+          icon: Palette,
+          description: "Fine-tune color temperature and saturation",
+        },
+        {
+          name: "Sharpen & Blur",
+          path: "/en-US/tool/image-filter",
+          icon: Focus,
+          description: "Apply sharpening or blur effects with precision",
+        },
+        {
+          name: "Auto Enhance",
+          path: "/en-US/tool/auto-enhance",
+          icon: Wand2,
+          description: "One-click automatic image enhancement",
+        },
+        {
+          name: "Perspective Correct",
+          path: "/en-US/tool/perspective-correct",
+          icon: Move,
+          description: "Fix perspective distortion and keystone effects",
+        },
+      ],
     },
+
     {
-      title: 'AI-Powered Tools',
+      title: "Photo Restoration",
       icon: Sparkles,
-      color: 'purple',
-      description: 'Advanced AI tools for intelligent image processing',
+      color: "blue",
+      description: "Restore and repair damaged or old photographs",
       tools: [
-        { name: 'Remove Background', path: '/en-US/tool/background-remove', icon: Eraser, description: 'AI-powered background removal with edge refinement' },
-        { name: 'Object Remover', path: '/en-US/tool/object-remove', icon: Target, description: 'Remove unwanted objects with content-aware fill' },
-        { name: 'Face Enhancement', path: '/en-US/tool/face-enhance', icon: Smile, description: 'AI-powered facial feature enhancement and smoothing' },
-        { name: 'Sky Replacement', path: '/en-US/tool/sky-replace', icon: CloudRain, description: 'Replace skies with AI-matched lighting and colors' },
-        { name: 'Upscale Image', path: '/en-US/tool/image-upscale', icon: Maximize2, description: 'AI super-resolution for enlarging images without quality loss' },
-        { name: 'Colorize B&W', path: '/en-US/tool/colorize', icon: Palette, description: 'Add realistic colors to black and white photos' },
-        { name: 'Style Transfer', path: '/en-US/tool/style-transfer', icon: Brush, description: 'Apply artistic styles using neural networks' },
-        { name: 'Noise Reduction', path: '/en-US/tool/denoise', icon: Filter, description: 'Remove noise and grain with AI algorithms' }
-      ]
+        {
+          name: "Restore Old Photos",
+          path: "/en-US/tool/photo-restore",
+          icon: Camera,
+          description: "Repair scratches, tears, and fading in vintage photos",
+        },
+        {
+          name: "Unblur Images",
+          path: "/en-US/tool/image-unblur",
+          icon: Eye,
+          description: "Sharpen blurry images using deconvolution algorithms",
+        },
+        {
+          name: "Remove Scratches",
+          path: "/en-US/tool/scratch-remove",
+          icon: Eraser,
+          description: "Automatically detect and remove scratches and dust",
+        },
+        {
+          name: "Color Restoration",
+          path: "/en-US/tool/color-restore",
+          icon: Droplets,
+          description: "Restore faded colors in old photographs",
+        },
+      ],
     },
     {
-      title: 'Photo Restoration',
-      icon: Sparkles,
-      color: 'blue',
-      description: 'Restore and repair damaged or old photographs',
-      tools: [
-        { name: 'Restore Old Photos', path: '/en-US/tool/photo-restore', icon: Camera, description: 'Repair scratches, tears, and fading in vintage photos' },
-        { name: 'Unblur Images', path: '/en-US/tool/image-unblur', icon: Eye, description: 'Sharpen blurry images using deconvolution algorithms' },
-        { name: 'Remove Scratches', path: '/en-US/tool/scratch-remove', icon: Eraser, description: 'Automatically detect and remove scratches and dust' },
-        { name: 'Color Restoration', path: '/en-US/tool/color-restore', icon: Droplets, description: 'Restore faded colors in old photographs' },
-        { name: 'Tear Repair', path: '/en-US/tool/tear-repair', icon: Layers, description: 'Seamlessly repair torn or damaged photo areas' },
-        { name: 'Stain Removal', path: '/en-US/tool/stain-remove', icon: Eraser, description: 'Remove water stains, spots, and discoloration' },
-        { name: 'Edge Enhancement', path: '/en-US/tool/edge-enhance', icon: Focus, description: 'Enhance edge definition and detail clarity' },
-        { name: 'Grain Reduction', path: '/en-US/tool/grain-reduce', icon: Filter, description: 'Reduce film grain while preserving detail' }
-      ]
-    },
-    {
-      title: 'Creative Effects',
+      title: "Creative Effects",
       icon: Palette,
-      color: 'pink',
-      description: 'Artistic filters and creative image transformations',
+      color: "pink",
+      description: "Artistic filters and creative image transformations",
       tools: [
-        { name: 'Artistic Filters', path: '/en-US/tool/artistic-filters', icon: Brush, description: 'Oil painting, watercolor, and sketch effects' },
-        { name: 'Vintage Effects', path: '/en-US/tool/vintage-effects', icon: Camera, description: 'Retro film looks and vintage color grading' },
-        { name: 'HDR Effects', path: '/en-US/tool/hdr-effects', icon: Sun, description: 'High dynamic range tone mapping effects' },
-        { name: 'Black & White', path: '/en-US/tool/black-white', icon: Moon, description: 'Professional B&W conversion with channel mixing' },
-        { name: 'Sepia Toning', path: '/en-US/tool/sepia-tone', icon: Droplets, description: 'Classic sepia and duotone effects' },
-        { name: 'Cross Processing', path: '/en-US/tool/cross-process', icon: RefreshCw, description: 'Film cross-processing color effects' },
-        { name: 'Lomography', path: '/en-US/tool/lomography', icon: Camera, description: 'Lomo camera effects with vignetting' },
-        { name: 'Orton Effect', path: '/en-US/tool/orton-effect', icon: Sparkles, description: 'Dreamy glow effect for landscapes' }
-      ]
+        {
+          name: "Artistic Filters",
+          path: "/en-US/tool/artistic-filters",
+          icon: Brush,
+          description: "Oil painting, watercolor, and sketch effects",
+        },
+        {
+          name: "Vintage Effects",
+          path: "/en-US/tool/vintage-effects",
+          icon: Camera,
+          description: "Retro film looks and vintage color grading",
+        },
+        {
+          name: "HDR Effects",
+          path: "/en-US/tool/hdr-effects",
+          icon: Sun,
+          description: "High dynamic range tone mapping effects",
+        },
+        {
+          name: "Black & White",
+          path: "/en-US/tool/black-white",
+          icon: Moon,
+          description: "Professional B&W conversion with channel mixing",
+        },
+        {
+          name: "Sepia Toning",
+          path: "/en-US/tool/sepia-tone",
+          icon: Droplets,
+          description: "Classic sepia and duotone effects",
+        },
+        {
+          name: "Cross Processing",
+          path: "/en-US/tool/cross-process",
+          icon: RefreshCw,
+          description: "Film cross-processing color effects",
+        },
+        {
+          name: "Lomography",
+          path: "/en-US/tool/lomography",
+          icon: Camera,
+          description: "Lomo camera effects with vignetting",
+        },
+        {
+          name: "Orton Effect",
+          path: "/en-US/tool/orton-effect",
+          icon: Sparkles,
+          description: "Dreamy glow effect for landscapes",
+        },
+      ],
     },
     {
-      title: 'Design & Graphics',
+      title: "Design & Graphics",
       icon: Layers,
-      color: 'indigo',
-      description: 'Professional design tools and graphic elements',
+      color: "indigo",
+      description: "Professional design tools and graphic elements",
       tools: [
-        { name: 'Add Text', path: '/en-US/tool/add-text', icon: Type, description: 'Add text with custom fonts, effects, and styling' },
-        { name: 'Logo Maker', path: '/en-US/tool/logo-maker', icon: Star, description: 'Create professional logos with templates' },
-        { name: 'Watermark Tool', path: '/en-US/tool/watermark', icon: Stamp, description: 'Add text or image watermarks with transparency' },
-        { name: 'Border & Frames', path: '/en-US/tool/borders-frames', icon: Square, description: 'Add decorative borders and photo frames' },
-        { name: 'Shape Overlays', path: '/en-US/tool/shape-overlays', icon: Shapes, description: 'Add geometric shapes and design elements' },
-        { name: 'Gradient Maker', path: '/en-US/tool/gradient-maker', icon: Blend, description: 'Create and apply custom gradient overlays' },
-        { name: 'Pattern Fill', path: '/en-US/tool/pattern-fill', icon: Grid, description: 'Fill areas with patterns and textures' },
-        { name: 'Shadow Effects', path: '/en-US/tool/shadow-effects', icon: Layers, description: 'Add drop shadows and 3D effects' }
-      ]
+        {
+          name: "Add Text",
+          path: "/en-US/tool/add-text",
+          icon: Type,
+          description: "Add text with custom fonts, effects, and styling",
+        },
+        {
+          name: "Logo Maker",
+          path: "/en-US/tool/logo-maker",
+          icon: Star,
+          description: "Create professional logos with templates",
+        },
+        {
+          name: "Watermark Tool",
+          path: "/en-US/tool/watermark",
+          icon: Stamp,
+          description: "Add text or image watermarks with transparency",
+        },
+        {
+          name: "Border & Frames",
+          path: "/en-US/tool/borders-frames",
+          icon: Square,
+          description: "Add decorative borders and photo frames",
+        },
+        {
+          name: "Shape Overlays",
+          path: "/en-US/tool/shape-overlays",
+          icon: Shapes,
+          description: "Add geometric shapes and design elements",
+        },
+        {
+          name: "Gradient Maker",
+          path: "/en-US/tool/gradient-maker",
+          icon: Blend,
+          description: "Create and apply custom gradient overlays",
+        },
+        {
+          name: "Pattern Fill",
+          path: "/en-US/tool/pattern-fill",
+          icon: Grid,
+          description: "Fill areas with patterns and textures",
+        },
+        {
+          name: "Shadow Effects",
+          path: "/en-US/tool/shadow-effects",
+          icon: Layers,
+          description: "Add drop shadows and 3D effects",
+        },
+      ],
     },
     {
-      title: 'Photo Collage',
+      title: "Photo Collage",
       icon: Grid,
-      color: 'teal',
-      description: 'Create stunning photo collages and layouts',
+      color: "teal",
+      description: "Create stunning photo collages and layouts",
       tools: [
-        { name: 'Collage Maker', path: '/en-US/tool/collage-maker', icon: Grid, description: 'Create photo collages with customizable layouts' },
-        { name: 'Photo Grid', path: '/en-US/tool/photo-grid', icon: Grid, description: 'Arrange photos in perfect grid layouts' },
-        { name: 'Mosaic Creator', path: '/en-US/tool/mosaic-creator', icon: Grid, description: 'Create photo mosaics from multiple images' },
-        { name: 'Panorama Maker', path: '/en-US/tool/panorama-maker', icon: Maximize2, description: 'Stitch multiple photos into panoramas' },
-        { name: 'Before/After', path: '/en-US/tool/before-after', icon: FlipHorizontal, description: 'Create before and after comparison images' },
-        { name: 'Photo Strips', path: '/en-US/tool/photo-strips', icon: Layers, description: 'Create photo booth style strips' },
-        { name: 'Scrapbook', path: '/en-US/tool/scrapbook', icon: Heart, description: 'Design scrapbook pages with decorative elements' },
-        { name: 'Timeline Maker', path: '/en-US/tool/timeline-maker', icon: Calendar, description: 'Create visual timelines with photos' }
-      ]
+        {
+          name: "Collage Maker",
+          path: "/en-US/tool/collage-maker",
+          icon: Grid,
+          description: "Create photo collages with customizable layouts",
+        },
+        {
+          name: "Photo Grid",
+          path: "/en-US/tool/photo-grid",
+          icon: Grid,
+          description: "Arrange photos in perfect grid layouts",
+        },
+        {
+          name: "Mosaic Creator",
+          path: "/en-US/tool/mosaic-creator",
+          icon: Grid,
+          description: "Create photo mosaics from multiple images",
+        },
+        {
+          name: "Panorama Maker",
+          path: "/en-US/tool/panorama-maker",
+          icon: Maximize2,
+          description: "Stitch multiple photos into panoramas",
+        },
+        {
+          name: "Before/After",
+          path: "/en-US/tool/before-after",
+          icon: FlipHorizontal,
+          description: "Create before and after comparison images",
+        },
+        {
+          name: "Photo Strips",
+          path: "/en-US/tool/photo-strips",
+          icon: Layers,
+          description: "Create photo booth style strips",
+        },
+        {
+          name: "Scrapbook",
+          path: "/en-US/tool/scrapbook",
+          icon: Heart,
+          description: "Design scrapbook pages with decorative elements",
+        },
+        {
+          name: "Timeline Maker",
+          path: "/en-US/tool/timeline-maker",
+          icon: Calendar,
+          description: "Create visual timelines with photos",
+        },
+      ],
     },
     {
-      title: 'Format Conversion',
+      title: "Format Conversion",
       icon: RefreshCw,
-      color: 'orange',
-      description: 'Convert between image formats and optimize files',
+      color: "orange",
+      description: "Convert between image formats and optimize files",
       tools: [
-        { name: 'Format Converter', path: '/en-US/tool/image-converter', icon: RefreshCw, description: 'Convert between JPG, PNG, WEBP, SVG, and more' },
-        { name: 'Batch Convert', path: '/en-US/tool/batch-convert', icon: Layers, description: 'Convert multiple images simultaneously' },
-        { name: 'Compress Images', path: '/en-US/tool/image-compress', icon: Archive, description: 'Reduce file size without visible quality loss' },
-        { name: 'WebP Converter', path: '/en-US/tool/webp-converter', icon: Zap, description: 'Convert to modern WebP format for web' },
-        { name: 'HEIC Converter', path: '/en-US/tool/heic-converter', icon: Smartphone, description: 'Convert iPhone HEIC photos to JPG/PNG' },
-        { name: 'RAW Processor', path: '/en-US/tool/raw-processor', icon: Camera, description: 'Process and convert RAW camera files' },
-        { name: 'Vector Converter', path: '/en-US/tool/vector-converter', icon: Layers, description: 'Convert raster images to vector formats' },
-        { name: 'PDF to Image', path: '/en-US/tool/pdf-to-image', icon: FileText, description: 'Extract images from PDF documents' }
-      ]
+        {
+          name: "Format Converter",
+          path: "/en-US/tool/image-converter",
+          icon: RefreshCw,
+          description: "Convert between JPG, PNG, WEBP, SVG, and more",
+        },
+        {
+          name: "Batch Convert",
+          path: "/en-US/tool/batch-convert",
+          icon: Layers,
+          description: "Convert multiple images simultaneously",
+        },
+        {
+          name: "Compress Images",
+          path: "/en-US/tool/image-compress",
+          icon: Archive,
+          description: "Reduce file size without visible quality loss",
+        },
+        {
+          name: "WebP Converter",
+          path: "/en-US/tool/webp-converter",
+          icon: Zap,
+          description: "Convert to modern WebP format for web",
+        },
+        {
+          name: "HEIC Converter",
+          path: "/en-US/tool/heic-converter",
+          icon: Smartphone,
+          description: "Convert iPhone HEIC photos to JPG/PNG",
+        },
+        {
+          name: "RAW Processor",
+          path: "/en-US/tool/raw-processor",
+          icon: Camera,
+          description: "Process and convert RAW camera files",
+        },
+        {
+          name: "Vector Converter",
+          path: "/en-US/tool/vector-converter",
+          icon: Layers,
+          description: "Convert raster images to vector formats",
+        },
+        {
+          name: "PDF to Image",
+          path: "/en-US/tool/pdf-to-image",
+          icon: FileText,
+          description: "Extract images from PDF documents",
+        },
+      ],
     },
     {
-      title: 'Professional Tools',
+      title: "Professional Tools",
       icon: Sliders,
-      color: 'red',
-      description: 'Advanced tools for professional photographers',
+      color: "red",
+      description: "Advanced tools for professional photographers",
       tools: [
-        { name: 'Curves Adjustment', path: '/en-US/tool/curves-adjust', icon: TrendingUp, description: 'Professional tone curve adjustments' },
-        { name: 'Levels Correction', path: '/en-US/tool/levels-correct', icon: BarChart, description: 'Histogram-based exposure correction' },
-        { name: 'Color Grading', path: '/en-US/tool/color-grading', icon: Palette, description: 'Professional color grading and LUTs' },
-        { name: 'Lens Correction', path: '/en-US/tool/lens-correct', icon: Aperture, description: 'Fix barrel distortion and vignetting' },
-        { name: 'Chromatic Aberration', path: '/en-US/tool/chromatic-fix', icon: Focus, description: 'Remove color fringing and aberrations' },
-        { name: 'White Balance', path: '/en-US/tool/white-balance', icon: Sun, description: 'Correct color temperature and tint' },
-        { name: 'Exposure Blend', path: '/en-US/tool/exposure-blend', icon: Layers, description: 'Blend multiple exposures for HDR' },
-        { name: 'Focus Stacking', path: '/en-US/tool/focus-stack', icon: Target, description: 'Combine multiple focus points for sharp images' }
-      ]
+        {
+          name: "Curves Adjustment",
+          path: "/en-US/tool/curves-adjust",
+          icon: TrendingUp,
+          description: "Professional tone curve adjustments",
+        },
+        {
+          name: "Levels Correction",
+          path: "/en-US/tool/levels-correct",
+          icon: BarChart,
+          description: "Histogram-based exposure correction",
+        },
+        {
+          name: "Color Grading",
+          path: "/en-US/tool/color-grading",
+          icon: Palette,
+          description: "Professional color grading and LUTs",
+        },
+        {
+          name: "Lens Correction",
+          path: "/en-US/tool/lens-correct",
+          icon: Aperture,
+          description: "Fix barrel distortion and vignetting",
+        },
+        {
+          name: "Chromatic Aberration",
+          path: "/en-US/tool/chromatic-fix",
+          icon: Focus,
+          description: "Remove color fringing and aberrations",
+        },
+        {
+          name: "White Balance",
+          path: "/en-US/tool/white-balance",
+          icon: Sun,
+          description: "Correct color temperature and tint",
+        },
+        {
+          name: "Exposure Blend",
+          path: "/en-US/tool/exposure-blend",
+          icon: Layers,
+          description: "Blend multiple exposures for HDR",
+        },
+        {
+          name: "Focus Stacking",
+          path: "/en-US/tool/focus-stack",
+          icon: Target,
+          description: "Combine multiple focus points for sharp images",
+        },
+      ],
     },
     {
-      title: 'Measurement & Analysis',
+      title: "Measurement & Analysis",
       icon: Gauge,
-      color: 'gray',
-      description: 'Analyze and measure image properties',
+      color: "gray",
+      description: "Analyze and measure image properties",
       tools: [
-        { name: 'Color Picker', path: '/en-US/tool/color-picker', icon: Palette, description: 'Extract colors and create palettes from images' },
-        { name: 'Histogram Viewer', path: '/en-US/tool/histogram', icon: BarChart, description: 'Analyze RGB and luminance histograms' },
-        { name: 'EXIF Viewer', path: '/en-US/tool/exif-viewer', icon: Eye, description: 'View detailed image metadata and camera settings' },
-        { name: 'Pixel Inspector', path: '/en-US/tool/pixel-inspector', icon: Crosshair, description: 'Examine individual pixel values and coordinates' },
-        { name: 'Image Dimensions', path: '/en-US/tool/image-dimensions', icon: Maximize2, description: 'Measure and display image dimensions' },
-        { name: 'Color Space Info', path: '/en-US/tool/color-space', icon: Palette, description: 'Analyze color space and profile information' },
-        { name: 'Quality Assessment', path: '/en-US/tool/quality-assess', icon: CheckCircle, description: 'Analyze image quality and sharpness' },
-        { name: 'Duplicate Finder', path: '/en-US/tool/duplicate-finder', icon: Copy, description: 'Find and remove duplicate images' }
-      ]
+        {
+          name: "Color Picker",
+          path: "/en-US/tool/color-picker",
+          icon: Palette,
+          description: "Extract colors and create palettes from images",
+        },
+        {
+          name: "Histogram Viewer",
+          path: "/en-US/tool/histogram",
+          icon: BarChart,
+          description: "Analyze RGB and luminance histograms",
+        },
+        {
+          name: "EXIF Viewer",
+          path: "/en-US/tool/exif-viewer",
+          icon: Eye,
+          description: "View detailed image metadata and camera settings",
+        },
+        {
+          name: "Pixel Inspector",
+          path: "/en-US/tool/pixel-inspector",
+          icon: Crosshair,
+          description: "Examine individual pixel values and coordinates",
+        },
+        {
+          name: "Image Dimensions",
+          path: "/en-US/tool/image-dimensions",
+          icon: Maximize2,
+          description: "Measure and display image dimensions",
+        },
+        {
+          name: "Color Space Info",
+          path: "/en-US/tool/color-space",
+          icon: Palette,
+          description: "Analyze color space and profile information",
+        },
+        {
+          name: "Quality Assessment",
+          path: "/en-US/tool/quality-assess",
+          icon: CheckCircle,
+          description: "Analyze image quality and sharpness",
+        },
+        {
+          name: "Duplicate Finder",
+          path: "/en-US/tool/duplicate-finder",
+          icon: Copy,
+          description: "Find and remove duplicate images",
+        },
+      ],
     },
     {
-      title: 'Specialized Tools',
+      title: "Specialized Tools",
       icon: Cpu,
-      color: 'violet',
-      description: 'Specialized tools for specific use cases',
+      color: "violet",
+      description: "Specialized tools for specific use cases",
       tools: [
-        { name: 'QR Code Generator', path: '/en-US/tool/qr-generator', icon: Hash, description: 'Generate QR codes with custom data' },
-        { name: 'Barcode Creator', path: '/en-US/tool/barcode-creator', icon: Binary, description: 'Create various barcode formats' },
-        { name: 'Favicon Generator', path: '/en-US/tool/favicon-generator', icon: Globe, description: 'Generate favicons for websites' },
-        { name: 'Icon Generator', path: '/en-US/tool/icon-generator', icon: Smartphone, description: 'Create app icons for iOS and Android' },
-        { name: 'Social Media Resize', path: '/en-US/tool/social-resize', icon: Users, description: 'Resize images for social media platforms' },
-        { name: 'Print Optimizer', path: '/en-US/tool/print-optimizer', icon: Printer, description: 'Optimize images for high-quality printing' },
-        { name: 'Web Optimizer', path: '/en-US/tool/web-optimizer', icon: Wifi, description: 'Optimize images for web performance' },
-        { name: 'Email Optimizer', path: '/en-US/tool/email-optimizer', icon: Mail, description: 'Optimize images for email newsletters' }
-      ]
+        {
+          name: "QR Code Generator",
+          path: "/en-US/tool/qr-generator",
+          icon: Hash,
+          description: "Generate QR codes with custom data",
+        },
+        {
+          name: "Barcode Creator",
+          path: "/en-US/tool/barcode-creator",
+          icon: Binary,
+          description: "Create various barcode formats",
+        },
+        {
+          name: "Favicon Generator",
+          path: "/en-US/tool/favicon-generator",
+          icon: Globe,
+          description: "Generate favicons for websites",
+        },
+        {
+          name: "Icon Generator",
+          path: "/en-US/tool/icon-generator",
+          icon: Smartphone,
+          description: "Create app icons for iOS and Android",
+        },
+        {
+          name: "Social Media Resize",
+          path: "/en-US/tool/social-resize",
+          icon: Users,
+          description: "Resize images for social media platforms",
+        },
+        {
+          name: "Print Optimizer",
+          path: "/en-US/tool/print-optimizer",
+          icon: Printer,
+          description: "Optimize images for high-quality printing",
+        },
+        {
+          name: "Web Optimizer",
+          path: "/en-US/tool/web-optimizer",
+          icon: Wifi,
+          description: "Optimize images for web performance",
+        },
+        {
+          name: "Email Optimizer",
+          path: "/en-US/tool/email-optimizer",
+          icon: Mail,
+          description: "Optimize images for email newsletters",
+        },
+      ],
     },
     {
-      title: 'Batch Processing',
+      title: "Batch Processing",
       icon: Layers,
-      color: 'emerald',
-      description: 'Process multiple images simultaneously',
+      color: "emerald",
+      description: "Process multiple images simultaneously",
       tools: [
-        { name: 'Batch Resize', path: '/en-US/tool/batch-resize', icon: Resize, description: 'Resize multiple images with consistent settings' },
-        { name: 'Batch Watermark', path: '/en-US/tool/batch-watermark', icon: Stamp, description: 'Add watermarks to multiple images at once' },
-        { name: 'Batch Rename', path: '/en-US/tool/batch-rename', icon: Type, description: 'Rename multiple image files with patterns' },
-        { name: 'Batch Filter', path: '/en-US/tool/batch-filter', icon: Filter, description: 'Apply filters to multiple images simultaneously' },
-        { name: 'Batch Crop', path: '/en-US/tool/batch-crop', icon: Crop, description: 'Crop multiple images to the same dimensions' },
-        { name: 'Batch Rotate', path: '/en-US/tool/batch-rotate', icon: RotateCw, description: 'Rotate multiple images by the same angle' },
-        { name: 'Batch Compress', path: '/en-US/tool/batch-compress', icon: Archive, description: 'Compress multiple images for web use' },
-        { name: 'Batch Convert', path: '/en-US/tool/batch-convert-advanced', icon: RefreshCw, description: 'Advanced batch format conversion with options' }
-      ]
+        {
+          name: "Batch Resize",
+          path: "/en-US/tool/batch-resize",
+          icon: Resize,
+          description: "Resize multiple images with consistent settings",
+        },
+        {
+          name: "Batch Watermark",
+          path: "/en-US/tool/batch-watermark",
+          icon: Stamp,
+          description: "Add watermarks to multiple images at once",
+        },
+        {
+          name: "Batch Rename",
+          path: "/en-US/tool/batch-rename",
+          icon: Type,
+          description: "Rename multiple image files with patterns",
+        },
+        {
+          name: "Batch Filter",
+          path: "/en-US/tool/batch-filter",
+          icon: Filter,
+          description: "Apply filters to multiple images simultaneously",
+        },
+        {
+          name: "Batch Crop",
+          path: "/en-US/tool/batch-crop",
+          icon: Crop,
+          description: "Crop multiple images to the same dimensions",
+        },
+        {
+          name: "Batch Rotate",
+          path: "/en-US/tool/batch-rotate",
+          icon: RotateCw,
+          description: "Rotate multiple images by the same angle",
+        },
+        {
+          name: "Batch Compress",
+          path: "/en-US/tool/batch-compress",
+          icon: Archive,
+          description: "Compress multiple images for web use",
+        },
+        {
+          name: "Batch Convert",
+          path: "/en-US/tool/batch-convert-advanced",
+          icon: RefreshCw,
+          description: "Advanced batch format conversion with options",
+        },
+      ],
     },
     {
-      title: 'Security & Privacy',
+      title: "Security & Privacy",
       icon: Shield,
-      color: 'red',
-      description: 'Protect and secure your images',
+      color: "red",
+      description: "Protect and secure your images",
       tools: [
-        { name: 'Remove Metadata', path: '/en-US/tool/metadata-remove', icon: Database, description: 'Strip EXIF data and location information' },
-        { name: 'Face Blur', path: '/en-US/tool/face-blur', icon: EyeOff, description: 'Automatically blur faces for privacy protection' },
-        { name: 'License Plate Blur', path: '/en-US/tool/license-blur', icon: Car, description: 'Detect and blur license plates automatically' },
-        { name: 'Text Redaction', path: '/en-US/tool/text-redact', icon: EyeOff, description: 'Automatically detect and redact text content' },
-        { name: 'Steganography', path: '/en-US/tool/steganography', icon: Lock, description: 'Hide secret messages within images' },
-        { name: 'Digital Signature', path: '/en-US/tool/digital-signature', icon: Fingerprint, description: 'Add digital signatures to verify authenticity' },
-        { name: 'Encrypt Images', path: '/en-US/tool/image-encrypt', icon: Key, description: 'Password-protect images with encryption' },
-        { name: 'Secure Delete', path: '/en-US/tool/secure-delete', icon: Trash2, description: 'Permanently delete images beyond recovery' }
-      ]
-    }
+        {
+          name: "Remove Metadata",
+          path: "/en-US/tool/metadata-remove",
+          icon: Database,
+          description: "Strip EXIF data and location information",
+        },
+        {
+          name: "Face Blur",
+          path: "/en-US/tool/face-blur",
+          icon: EyeOff,
+          description: "Automatically blur faces for privacy protection",
+        },
+        {
+          name: "License Plate Blur",
+          path: "/en-US/tool/license-blur",
+          icon: Car,
+          description: "Detect and blur license plates automatically",
+        },
+        {
+          name: "Text Redaction",
+          path: "/en-US/tool/text-redact",
+          icon: EyeOff,
+          description: "Automatically detect and redact text content",
+        },
+        {
+          name: "Steganography",
+          path: "/en-US/tool/steganography",
+          icon: Lock,
+          description: "Hide secret messages within images",
+        },
+        {
+          name: "Digital Signature",
+          path: "/en-US/tool/digital-signature",
+          icon: Fingerprint,
+          description: "Add digital signatures to verify authenticity",
+        },
+        {
+          name: "Encrypt Images",
+          path: "/en-US/tool/image-encrypt",
+          icon: Key,
+          description: "Password-protect images with encryption",
+        },
+        {
+          name: "Secure Delete",
+          path: "/en-US/tool/secure-delete",
+          icon: Trash2,
+          description: "Permanently delete images beyond recovery",
+        },
+      ],
+    },
   ];
 
   const getColorClasses = (color: string) => {
     const colors = {
-      green: { bg: 'bg-green-50', text: 'text-green-600', border: 'border-green-200', gradient: 'from-green-500 to-emerald-500' },
-      purple: { bg: 'bg-purple-50', text: 'text-purple-600', border: 'border-purple-200', gradient: 'from-purple-500 to-violet-500' },
-      blue: { bg: 'bg-blue-50', text: 'text-blue-600', border: 'border-blue-200', gradient: 'from-blue-500 to-cyan-500' },
-      pink: { bg: 'bg-pink-50', text: 'text-pink-600', border: 'border-pink-200', gradient: 'from-pink-500 to-rose-500' },
-      indigo: { bg: 'bg-indigo-50', text: 'text-indigo-600', border: 'border-indigo-200', gradient: 'from-indigo-500 to-purple-500' },
-      teal: { bg: 'bg-teal-50', text: 'text-teal-600', border: 'border-teal-200', gradient: 'from-teal-500 to-cyan-500' },
-      orange: { bg: 'bg-orange-50', text: 'text-orange-600', border: 'border-orange-200', gradient: 'from-orange-500 to-red-500' },
-      red: { bg: 'bg-red-50', text: 'text-red-600', border: 'border-red-200', gradient: 'from-red-500 to-pink-500' },
-      gray: { bg: 'bg-gray-50', text: 'text-gray-600', border: 'border-gray-200', gradient: 'from-gray-500 to-slate-500' },
-      violet: { bg: 'bg-violet-50', text: 'text-violet-600', border: 'border-violet-200', gradient: 'from-violet-500 to-purple-500' },
-      emerald: { bg: 'bg-emerald-50', text: 'text-emerald-600', border: 'border-emerald-200', gradient: 'from-emerald-500 to-teal-500' }
+      green: {
+        bg: "bg-green-50",
+        text: "text-green-600",
+        border: "border-green-200",
+        gradient: "from-green-500 to-emerald-500",
+      },
+      purple: {
+        bg: "bg-purple-50",
+        text: "text-purple-600",
+        border: "border-purple-200",
+        gradient: "from-purple-500 to-violet-500",
+      },
+      blue: {
+        bg: "bg-blue-50",
+        text: "text-blue-600",
+        border: "border-blue-200",
+        gradient: "from-blue-500 to-cyan-500",
+      },
+      pink: {
+        bg: "bg-pink-50",
+        text: "text-pink-600",
+        border: "border-pink-200",
+        gradient: "from-pink-500 to-rose-500",
+      },
+      indigo: {
+        bg: "bg-indigo-50",
+        text: "text-indigo-600",
+        border: "border-indigo-200",
+        gradient: "from-indigo-500 to-purple-500",
+      },
+      teal: {
+        bg: "bg-teal-50",
+        text: "text-teal-600",
+        border: "border-teal-200",
+        gradient: "from-teal-500 to-cyan-500",
+      },
+      orange: {
+        bg: "bg-orange-50",
+        text: "text-orange-600",
+        border: "border-orange-200",
+        gradient: "from-orange-500 to-red-500",
+      },
+      red: {
+        bg: "bg-red-50",
+        text: "text-red-600",
+        border: "border-red-200",
+        gradient: "from-red-500 to-pink-500",
+      },
+      gray: {
+        bg: "bg-gray-50",
+        text: "text-gray-600",
+        border: "border-gray-200",
+        gradient: "from-gray-500 to-slate-500",
+      },
+      violet: {
+        bg: "bg-violet-50",
+        text: "text-violet-600",
+        border: "border-violet-200",
+        gradient: "from-violet-500 to-purple-500",
+      },
+      emerald: {
+        bg: "bg-emerald-50",
+        text: "text-emerald-600",
+        border: "border-emerald-200",
+        gradient: "from-emerald-500 to-teal-500",
+      },
     };
     return colors[color as keyof typeof colors];
   };
 
-  const totalTools = toolCategories.reduce((sum, category) => sum + category.tools.length, 0);
+  const totalTools = toolCategories.reduce(
+    (sum, category) => sum + category.tools.length,
+    0
+  );
 
   return (
     <>
       <Helmet>
-        <title>Image Tools - Professional Image Editor & Converter | Doclair</title>
-        <meta name="description" content={`Professional image editing tools with ${totalTools}+ advanced features. AI-powered editing, batch processing, format conversion, and creative effects. Free online image editor.`} />
-        <meta name="keywords" content="image editor, photo editor, AI image tools, batch processing, format converter, creative effects, professional photography tools" />
+        <title>
+          Image Tools - Professional Image Editor & Converter | Doclair
+        </title>
+        <meta
+          name="description"
+          content={`Professional image editing tools with ${totalTools}+ advanced features. AI-powered editing, batch processing, format conversion, and creative effects. Free online image editor.`}
+        />
+        <meta
+          name="keywords"
+          content="image editor, photo editor, AI image tools, batch processing, format converter, creative effects, professional photography tools"
+        />
         <link rel="canonical" href="https://doclair.com/en-US/image-tools" />
-        <meta property="og:title" content={`${totalTools}+ Professional Image Tools - Edit, Convert & Enhance Images`} />
-        <meta property="og:description" content="Complete image editing suite with AI-powered tools, batch processing, creative effects, and professional photography features. Free online image editor." />
+        <meta
+          property="og:title"
+          content={`${totalTools}+ Professional Image Tools - Edit, Convert & Enhance Images`}
+        />
+        <meta
+          property="og:description"
+          content="Complete image editing suite with AI-powered tools, batch processing, creative effects, and professional photography features. Free online image editor."
+        />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">
@@ -2034,15 +2509,25 @@ const ImageTools: React.FC = () => {
                 <Image className="h-16 w-16 text-white" />
               </div>
               <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
-                <span className="cursive-text text-5xl md:text-6xl text-green-600">Professional</span>
+                <span className="cursive-text text-5xl md:text-6xl text-green-600">
+                  Professional
+                </span>
                 <br />
                 Image Tools
               </h1>
               <p className="text-xl text-gray-600 max-w-4xl mx-auto mb-8">
-                Complete image editing suite with <span className="cursive-text text-purple-600 text-2xl">{totalTools}+</span> professional tools. 
-                AI-powered editing, batch processing, creative effects, and <span className="cursive-text text-blue-600 text-xl">enterprise-grade</span> features.
+                Complete image editing suite with{" "}
+                <span className="cursive-text text-purple-600 text-2xl">
+                  {totalTools}+
+                </span>{" "}
+                professional tools. AI-powered editing, batch processing,
+                creative effects, and{" "}
+                <span className="cursive-text text-blue-600 text-xl">
+                  enterprise-grade
+                </span>{" "}
+                features.
               </p>
-              
+
               {/* Feature highlights */}
               <div className="flex flex-wrap justify-center gap-4 mb-8">
                 <div className="bg-purple-50 text-purple-700 px-4 py-2 rounded-full text-sm font-semibold flex items-center gap-2">
@@ -2066,20 +2551,34 @@ const ImageTools: React.FC = () => {
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-1">{totalTools}+</div>
-                  <div className="text-sm text-gray-600 font-medium">Professional Tools</div>
+                  <div className="text-3xl font-bold text-green-600 mb-1">
+                    {totalTools}+
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Professional Tools
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-1">12</div>
-                  <div className="text-sm text-gray-600 font-medium">AI-Powered</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-1">
+                    12
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    AI-Powered
+                  </div>
                 </div>
                 <div className="text-center">
                   <div className="text-3xl font-bold text-blue-600 mb-1">8</div>
-                  <div className="text-sm text-gray-600 font-medium">Batch Tools</div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    Batch Tools
+                  </div>
                 </div>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-orange-600 mb-1">20+</div>
-                  <div className="text-sm text-gray-600 font-medium">File Formats</div>
+                  <div className="text-3xl font-bold text-orange-600 mb-1">
+                    20+
+                  </div>
+                  <div className="text-sm text-gray-600 font-medium">
+                    File Formats
+                  </div>
                 </div>
               </div>
             </div>
@@ -2094,16 +2593,24 @@ const ImageTools: React.FC = () => {
               return (
                 <div key={categoryIndex} className="apple-floating-card">
                   <div className="flex items-center mb-8">
-                    <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${colorClasses.gradient} mr-6 shadow-lg`}>
+                    <div
+                      className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${colorClasses.gradient} mr-6 shadow-lg`}
+                    >
                       <category.icon className="h-8 w-8 text-white" />
                     </div>
                     <div>
-                      <h2 className="text-3xl font-bold text-gray-900 mb-2">{category.title}</h2>
-                      <p className="text-gray-600 text-lg">{category.description}</p>
-                      <div className="text-sm text-gray-500 mt-1">{category.tools.length} tools available</div>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                        {category.title}
+                      </h2>
+                      <p className="text-gray-600 text-lg">
+                        {category.description}
+                      </p>
+                      <div className="text-sm text-gray-500 mt-1">
+                        {category.tools.length} tools available
+                      </div>
                     </div>
                   </div>
-                  
+
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {category.tools.map((tool, toolIndex) => (
                       <Link
@@ -2112,8 +2619,12 @@ const ImageTools: React.FC = () => {
                         className="group bg-gray-50/80 hover:bg-white border border-gray-200/50 hover:border-gray-300 rounded-2xl p-6 transition-all duration-500 hover:shadow-xl hover:-translate-y-2"
                       >
                         <div className="flex items-start mb-4">
-                          <div className={`inline-flex p-3 rounded-xl ${colorClasses.bg} mr-4 group-hover:bg-gradient-to-r group-hover:${colorClasses.gradient} transition-all duration-500 shadow-sm group-hover:shadow-lg`}>
-                            <tool.icon className={`h-6 w-6 ${colorClasses.text} group-hover:text-white transition-colors duration-500`} />
+                          <div
+                            className={`inline-flex p-3 rounded-xl ${colorClasses.bg} mr-4 group-hover:bg-gradient-to-r group-hover:${colorClasses.gradient} transition-all duration-500 shadow-sm group-hover:shadow-lg`}
+                          >
+                            <tool.icon
+                              className={`h-6 w-6 ${colorClasses.text} group-hover:text-white transition-colors duration-500`}
+                            />
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="text-lg font-bold text-gray-900 group-hover:text-blue-600 transition-colors duration-500 mb-2">
@@ -2124,9 +2635,11 @@ const ImageTools: React.FC = () => {
                             </p>
                           </div>
                         </div>
-                        
+
                         <div className="flex items-center justify-between">
-                          <div className={`category-badge ${colorClasses.bg} ${colorClasses.text} border ${colorClasses.border}`}>
+                          <div
+                            className={`category-badge ${colorClasses.bg} ${colorClasses.text} border ${colorClasses.border}`}
+                          >
                             {category.title}
                           </div>
                           <ArrowRight className="h-4 w-4 text-gray-400 group-hover:text-blue-600 group-hover:translate-x-1 transition-all duration-500" />
@@ -2143,45 +2656,69 @@ const ImageTools: React.FC = () => {
         {/* Features Section */}
         <div className="bg-gradient-to-r from-green-600 via-blue-600 to-purple-600 text-white py-20 relative overflow-hidden">
           <div className="absolute inset-0 bg-black/10"></div>
-          
+
           {/* Floating elements */}
           <div className="absolute top-10 left-10 floating-element opacity-20">
             <Sparkles className="h-8 w-8 text-white" />
           </div>
-          <div className="absolute bottom-10 right-10 floating-element opacity-20" style={{ animationDelay: '4s' }}>
+          <div
+            className="absolute bottom-10 right-10 floating-element opacity-20"
+            style={{ animationDelay: "4s" }}
+          >
             <Palette className="h-10 w-10 text-white" />
           </div>
-          
+
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-16">
               <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Why Choose Our <span className="cursive-text text-5xl">Image</span> Tools?
+                Why Choose Our{" "}
+                <span className="cursive-text text-5xl">Image</span> Tools?
               </h2>
               <p className="text-xl text-green-100 max-w-3xl mx-auto">
-                Professional-grade image processing with <span className="cursive-text text-2xl text-white">cutting-edge</span> AI technology and intuitive design.
+                Professional-grade image processing with{" "}
+                <span className="cursive-text text-2xl text-white">
+                  cutting-edge
+                </span>{" "}
+                AI technology and intuitive design.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <div className="text-center bg-white/10 backdrop-blur-xl rounded-2xl p-8 hover:bg-white/20 transition-all duration-500">
                 <Sparkles className="h-16 w-16 mx-auto mb-6 text-green-200" />
-                <h3 className="text-xl font-bold mb-4">AI-Powered Processing</h3>
-                <p className="text-green-100">Advanced machine learning for intelligent background removal, object detection, and enhancement.</p>
+                <h3 className="text-xl font-bold mb-4">
+                  AI-Powered Processing
+                </h3>
+                <p className="text-green-100">
+                  Advanced machine learning for intelligent background removal,
+                  object detection, and enhancement.
+                </p>
               </div>
               <div className="text-center bg-white/10 backdrop-blur-xl rounded-2xl p-8 hover:bg-white/20 transition-all duration-500">
                 <Layers className="h-16 w-16 mx-auto mb-6 text-blue-200" />
                 <h3 className="text-xl font-bold mb-4">Batch Processing</h3>
-                <p className="text-blue-100">Process hundreds of images simultaneously with consistent settings and professional results.</p>
+                <p className="text-blue-100">
+                  Process hundreds of images simultaneously with consistent
+                  settings and professional results.
+                </p>
               </div>
               <div className="text-center bg-white/10 backdrop-blur-xl rounded-2xl p-8 hover:bg-white/20 transition-all duration-500">
                 <Shield className="h-16 w-16 mx-auto mb-6 text-purple-200" />
                 <h3 className="text-xl font-bold mb-4">Privacy & Security</h3>
-                <p className="text-purple-100">All processing happens locally in your browser. Your images never leave your device.</p>
+                <p className="text-purple-100">
+                  All processing happens locally in your browser. Your images
+                  never leave your device.
+                </p>
               </div>
               <div className="text-center bg-white/10 backdrop-blur-xl rounded-2xl p-8 hover:bg-white/20 transition-all duration-500">
                 <Zap className="h-16 w-16 mx-auto mb-6 text-yellow-200" />
-                <h3 className="text-xl font-bold mb-4">Lightning Performance</h3>
-                <p className="text-yellow-100">WebAssembly-powered algorithms deliver professional results in seconds, not minutes.</p>
+                <h3 className="text-xl font-bold mb-4">
+                  Lightning Performance
+                </h3>
+                <p className="text-yellow-100">
+                  WebAssembly-powered algorithms deliver professional results in
+                  seconds, not minutes.
+                </p>
               </div>
             </div>
           </div>
@@ -2193,22 +2730,35 @@ const ImageTools: React.FC = () => {
             <div className="mb-8">
               <Image className="h-16 w-16 mx-auto text-green-600 mb-6" />
             </div>
-            
+
             <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Ready to <span className="cursive-text text-5xl text-green-600">Transform</span> Your Images?
+              Ready to{" "}
+              <span className="cursive-text text-5xl text-green-600">
+                Transform
+              </span>{" "}
+              Your Images?
             </h2>
-            
+
             <p className="text-xl text-gray-600 mb-10 max-w-3xl mx-auto">
-              Join millions of professionals who trust our <span className="cursive-text text-purple-600 text-2xl">advanced</span> image tools 
-              for their creative and business needs.
+              Join millions of professionals who trust our{" "}
+              <span className="cursive-text text-purple-600 text-2xl">
+                advanced
+              </span>{" "}
+              image tools for their creative and business needs.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-6 justify-center">
-              <Link to="/en-US/tool/background-remove" className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-500 flex items-center justify-center gap-3 shadow-2xl hover:scale-105">
+              <Link
+                to="/en-US/tool/background-remove"
+                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-10 py-4 rounded-full font-bold text-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-500 flex items-center justify-center gap-3 shadow-2xl hover:scale-105"
+              >
                 <Eraser className="h-6 w-6" />
                 Try Background Remover
               </Link>
-              <Link to="/en-US/tool/image-resize" className="bg-white border-2 border-gray-300 text-gray-800 px-10 py-4 rounded-full font-bold text-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-500 flex items-center justify-center gap-3 shadow-lg hover:scale-105">
+              <Link
+                to="/en-US/tool/image-resize"
+                className="bg-white border-2 border-gray-300 text-gray-800 px-10 py-4 rounded-full font-bold text-lg hover:border-gray-400 hover:bg-gray-50 transition-all duration-500 flex items-center justify-center gap-3 shadow-lg hover:scale-105"
+              >
                 <Resize className="h-6 w-6" />
                 Start with Resize Tool
               </Link>

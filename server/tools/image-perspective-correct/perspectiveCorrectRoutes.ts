@@ -1,10 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { config } from "../../config/environment.js";
-import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
-import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
-import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
+import { config } from "../../config/environment";
+import { validateFile, sanitizeFilename } from "../../utils/fileUtils";
+import { logger } from "../../utils/logger";
+import perspectiveCorrectService from "./perspectiveCorrectService";
+import { asyncHandler, AppError } from "../../middleware/errorHandler";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for perspective correction
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -53,15 +53,17 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image perspective correction endpoint
 router.post(
-  "/crop-image",
+  "/perspective-correct",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(
+      `📐 Received perspective correction request for: ${file.originalname}`
+    );
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,37 +73,36 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse correction options
+    let correctionOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      correctionOptions = JSON.parse(req.body.correctionOptions || "{}");
+      logger.info(
+        `📐 Correction options: ${JSON.stringify(correctionOptions)}`
+      );
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(`❌ Failed to parse correction options: ${parseError}`);
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid correction options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_CORRECTION_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `📐 Starting perspective correction for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Correct the image
+      const result = await perspectiveCorrectService.correctPerspective(
         file.buffer,
         file.originalname,
-        cropOptions
+        correctionOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = correctionOptions.outputFormat || "png";
       const sanitizedFilename = sanitizeFilename(
         file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
       );
@@ -126,42 +127,63 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Corrected-Dimensions",
+        `${result.correctedDimensions.width}x${result.correctedDimensions.height}`
+      );
+      res.setHeader("X-Correction-Angle", result.correctionAngle.toString());
+      res.setHeader(
+        "X-Keystone-Correction",
+        result.keystoneCorrection.toString()
       );
 
-      // Send the cropped image buffer
+      // Send the corrected image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Perspective correction completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(
+        `📊 Dimensions: ${result.originalDimensions.width}x${result.originalDimensions.height} → ${result.correctedDimensions.width}x${result.correctedDimensions.height}`
+      );
+      logger.info(
+        `📐 Correction: Angle=${result.correctionAngle.toFixed(
+          2
+        )}°, Keystone=${result.keystoneCorrection.toFixed(2)}`
+      );
+    } catch (processingError) {
+      logger.error(`❌ Perspective correction failed: ${processingError}`);
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Perspective correction failed: ${
+          processingError instanceof Error
+            ? processingError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "PERSPECTIVE_CORRECTION_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for perspective correction tool
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-perspective-correct",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "Perspective distortion correction",
+        "Keystone effect removal",
+        "Document scan optimization",
+        "Building/architecture correction",
+        "Whiteboard image enhancement",
+        "Manual corner control",
+        "Auto corner detection",
+        "Grid overlay for alignment",
         "Multiple output formats",
-        "Aspect ratio preservation",
         "Quality control",
       ],
     });

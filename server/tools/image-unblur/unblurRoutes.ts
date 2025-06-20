@@ -1,10 +1,10 @@
 import { Router } from "express";
 import multer from "multer";
-import { config } from "../../config/environment.js";
-import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
-import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
-import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
+import { config } from "../../config/environment";
+import { validateFile, sanitizeFilename } from "../../utils/fileUtils";
+import { logger } from "../../utils/logger";
+import unblurService from "./unblurService";
+import { asyncHandler, AppError } from "../../middleware/errorHandler";
 
 const router = Router();
 
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for unblurring
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -53,15 +53,15 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image unblur endpoint
 router.post(
-  "/crop-image",
+  "/unblur-image",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(`🔍 Received unblur request for: ${file.originalname}`);
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,39 +71,39 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse unblur options
+    let unblurOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      unblurOptions = JSON.parse(req.body.unblurOptions || "{}");
+      logger.info(`🔍 Unblur options: ${JSON.stringify(unblurOptions)}`);
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(`❌ Failed to parse unblur options: ${parseError}`);
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid unblur options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_UNBLUR_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `🔍 Starting unblur processing for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Unblur the image
+      const result = await unblurService.unblurImage(
         file.buffer,
         file.originalname,
-        cropOptions
+        unblurOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = unblurOptions.outputFormat || "png";
       const sanitizedFilename = sanitizeFilename(
-        file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
+        `unblurred_${file.originalname.replace(
+          /\.[^/.]+$/,
+          `.${outputFormat}`
+        )}`
       );
 
       // Set response headers
@@ -126,42 +126,52 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Processed-Dimensions",
+        `${result.processedDimensions.width}x${result.processedDimensions.height}`
       );
+      res.setHeader("X-Enhancements", result.enhancements.join(", "));
+      res.setHeader("X-Clarity-Score", result.clarityScore.toString());
 
-      // Send the cropped image buffer
+      // Send the unblurred image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Unblur processing completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(`🔍 Applied techniques: ${result.enhancements.join(", ")}`);
+    } catch (processingError) {
+      logger.error(`❌ Unblur processing failed: ${processingError}`);
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Unblur processing failed: ${
+          processingError instanceof Error
+            ? processingError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "UNBLUR_PROCESSING_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for unblur tool
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-unblur",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "Deconvolution algorithms",
+        "Motion blur correction",
+        "Gaussian blur removal",
+        "Focus enhancement",
+        "Detail recovery",
+        "Edge sharpening",
+        "Noise suppression",
         "Multiple output formats",
-        "Aspect ratio preservation",
         "Quality control",
       ],
     });

@@ -3,7 +3,7 @@ import multer from "multer";
 import { config } from "../../config/environment.js";
 import { validateFile, sanitizeFilename } from "../../utils/fileUtils.js";
 import { logger } from "../../utils/logger.js";
-import cropService from "./cropService.js";
+import autoEnhanceService from "./autoEnhanceService.js";
 import { asyncHandler, AppError } from "../../middleware/errorHandler.js";
 
 const router = Router();
@@ -13,7 +13,7 @@ const upload = multer({
   storage: multer.memoryStorage(),
   limits: {
     fileSize: config.maxFileSize,
-    files: 1, // Single file for cropping
+    files: 1, // Single file for auto enhancement
   },
   fileFilter: (req, file, cb) => {
     const allowedMimes = [
@@ -53,15 +53,15 @@ const validateImageUpload = (req: any, res: any, next: any) => {
   next();
 };
 
-// Single image crop endpoint
+// Single image auto enhancement endpoint
 router.post(
-  "/crop-image",
+  "/auto-enhance",
   upload.single("image"),
   validateImageUpload,
   asyncHandler(async (req, res) => {
     const file = req.file!;
 
-    logger.info(`🖼️ Received crop request for: ${file.originalname}`);
+    logger.info(`🎨 Received auto enhance request for: ${file.originalname}`);
     logger.info(`📊 File details: ${file.mimetype}, ${file.size} bytes`);
 
     // Validate image file specifically
@@ -71,37 +71,34 @@ router.post(
       throw new AppError(validation.error!, 400, "INVALID_IMAGE_FILE");
     }
 
-    // Parse crop options
-    let cropOptions;
+    // Parse enhancement options
+    let enhanceOptions;
     try {
-      cropOptions = JSON.parse(req.body.cropOptions || "{}");
-      logger.info(`✂️ Crop options: ${JSON.stringify(cropOptions)}`);
+      enhanceOptions = JSON.parse(req.body.enhanceOptions || "{}");
+      logger.info(`🎨 Enhancement options: ${JSON.stringify(enhanceOptions)}`);
     } catch (parseError) {
-      logger.error(`❌ Failed to parse crop options: ${parseError}`);
+      logger.error(`❌ Failed to parse enhancement options: ${parseError}`);
       throw new AppError(
-        "Invalid crop options format",
+        "Invalid enhancement options format",
         400,
-        "INVALID_CROP_OPTIONS"
+        "INVALID_ENHANCE_OPTIONS"
       );
     }
 
-    // NOTE: Validation now happens inside cropService.cropImage()
-    // after extracting actual image dimensions
-
     logger.info(
-      `🖼️ Starting crop for: ${file.originalname}, Size: ${file.size} bytes`
+      `🎨 Starting auto enhancement for: ${file.originalname}, Size: ${file.size} bytes`
     );
 
     try {
-      // Crop the image (validation happens inside this method)
-      const result = await cropService.cropImage(
+      // Enhance the image
+      const result = await autoEnhanceService.enhanceImage(
         file.buffer,
         file.originalname,
-        cropOptions
+        enhanceOptions
       );
 
       // Determine output filename and format
-      const outputFormat = cropOptions.outputFormat || "png";
+      const outputFormat = enhanceOptions.outputFormat || "png";
       const sanitizedFilename = sanitizeFilename(
         file.originalname.replace(/\.[^/.]+$/, `.${outputFormat}`)
       );
@@ -126,43 +123,59 @@ router.post(
         `${result.originalDimensions.width}x${result.originalDimensions.height}`
       );
       res.setHeader(
-        "X-Cropped-Dimensions",
-        `${result.croppedDimensions.width}x${result.croppedDimensions.height}`
+        "X-Processed-Dimensions",
+        `${result.processedDimensions.width}x${result.processedDimensions.height}`
       );
+      res.setHeader("X-Enhancements", result.enhancements.join(", "));
+      res.setHeader("X-Quality-Score", result.qualityScore.toString());
 
-      // Send the cropped image buffer
+      // Send the enhanced image buffer
       res.send(result.buffer);
 
       logger.info(
-        `✅ Image crop completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
+        `✅ Auto enhancement completed: ${sanitizedFilename}, Time: ${result.processingTime}ms`
       );
-    } catch (cropError) {
-      logger.error(`❌ Crop processing failed: ${cropError}`);
+      logger.info(`🎨 Applied enhancements: ${result.enhancements.join(", ")}`);
+    } catch (enhancementError) {
+      logger.error(`❌ Auto enhancement failed: ${enhancementError}`);
       throw new AppError(
-        `Crop processing failed: ${
-          cropError instanceof Error ? cropError.message : "Unknown error"
+        `Auto enhancement failed: ${
+          enhancementError instanceof Error
+            ? enhancementError.message
+            : "Unknown error"
         }`,
         500,
-        "CROP_PROCESSING_ERROR"
+        "AUTO_ENHANCE_PROCESSING_ERROR"
       );
     }
   })
 );
 
-// Health check endpoint for image tools
+// Health check endpoint for auto enhance tools
 router.get(
   "/health",
   asyncHandler(async (req, res) => {
     res.json({
       status: "healthy",
-      service: "image-crop",
+      service: "image-auto-enhance",
       timestamp: new Date().toISOString(),
       version: "1.0.0",
       features: [
-        "Image cropping",
+        "One-click auto enhancement",
+        "AI-powered image analysis",
+        "Multiple enhancement modes",
+        "Portrait optimization",
+        "Landscape enhancement",
+        "Low-light improvement",
+        "Vintage effects",
+        "Vivid color enhancement",
+        "Noise reduction",
+        "Detail sharpening",
+        "Shadow/highlight recovery",
+        "Clarity improvement",
+        "Color preservation",
+        "Quality scoring",
         "Multiple output formats",
-        "Aspect ratio preservation",
-        "Quality control",
       ],
     });
   })
