@@ -26,6 +26,9 @@ import imageScratchRemoveRoutes from "./tools/image-scratch-remove/scratchRemove
 import imageColorRestoreRoutes from "./tools/image-color-restore/colorRestoreRoutes.js";
 import imageArtisticFiltersRoutes from "./tools/image-artistic-filters/artisticFiltersRoutes.js";
 import imageVintageEffectsRoutes from "./tools/image-vintage-effects/vintageEffectsRoutes.js";
+import imageHDREffectRoutes from "./tools/image-hdr-effect/hdrEffectRoutes.js";
+import imageBlackAndWhiteRoutes from "./tools/image-black-and-white/blackAndWhiteRoutes.js";
+import imageSepiaToneRoutes from "./tools/image-sepia-tone/sepiaToneRoutes.js";
 
 const app = express();
 
@@ -98,6 +101,11 @@ app.use(
       "X-HDR-Style",
       "X-Tone-Mapping",
       "X-Dynamic-Range",
+      "X-Conversion-Mode",
+      "X-Toning",
+      "X-Film-Type",
+      "X-Tone-Type",
+      "X-Tone-Intensity",
       "Content-Disposition",
     ],
   })
@@ -139,6 +147,9 @@ app.use("/api/tools/image", imageScratchRemoveRoutes);
 app.use("/api/tools/image", imageColorRestoreRoutes);
 app.use("/api/tools/image", imageArtisticFiltersRoutes);
 app.use("/api/tools/image", imageVintageEffectsRoutes);
+app.use("/api/tools/image", imageHDREffectRoutes);
+app.use("/api/tools/image", imageBlackAndWhiteRoutes);
+app.use("/api/tools/image", imageSepiaToneRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
@@ -171,6 +182,8 @@ app.get("/", (req, res) => {
       imageArtisticFilter: "/api/tools/image/artistic-filter",
       imageVintageEffect: "/api/tools/image/vintage-effect",
       imageHdrEffect: "/api/tools/image/hdr-effect",
+      imageBlackAndWhite: "/api/tools/image/black-and-white",
+      imageSepiaTone: "/api/tools/image/sepia-tone",
       imageToolsHealth: "/api/tools/image/health",
     },
   });
@@ -205,6 +218,8 @@ app.get("/api", (req, res) => {
       "POST /api/tools/image/artistic-filter - Apply artistic filters",
       "POST /api/tools/image/vintage-effect - Apply vintage film effects",
       "POST /api/tools/image/hdr-effect - Apply HDR effects",
+      "POST /api/tools/image/black-and-white - Convert to black & white",
+      "POST /api/tools/image/sepia-tone - Apply sepia and duotone effects",
       "GET /api/tools/image/health - Image tools health",
     ],
   });
@@ -256,6 +271,8 @@ const server = app.listen(config.port, () => {
   logger.info(`🎨 Artistic filters tool ready`);
   logger.info(`🎞️ Vintage effects tool ready`);
   logger.info(`🌈 HDR effects tool ready`);
+  logger.info(`🖤 Black & white conversion tool ready`);
+  logger.info(`🎭 Sepia & duotone effects tool ready`);
   logger.info(`🔒 Privacy-first processing - no files stored`);
   logger.info(`🌍 Environment: ${config.nodeEnv}`);
   logger.info(`📊 CORS origins: ${config.corsOrigins.join(", ")}`);

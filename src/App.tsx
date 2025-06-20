@@ -23,6 +23,9 @@ import RemoveScratches from "./pages/RemoveScratches";
 import ColorRestoration from "./pages/ColorRestoration";
 import ArtisticFilters from "./pages/ArtisticFilters";
 import VintageEffects from "./pages/VintageEffects";
+import HDREffects from "./pages/HDREffects";
+import BlackAndWhite from "./pages/BlackAndWhite";
+import SepiaToning from "./pages/SepiaToning";
 
 function App() {
   return (
@@ -54,6 +57,9 @@ function App() {
         <Route path="tool/color-restore" element={<ColorRestoration />} />
         <Route path="tool/artistic-filters" element={<ArtisticFilters />} />
         <Route path="tool/vintage-effects" element={<VintageEffects />} />
+        <Route path="tool/hdr-effects" element={<HDREffects />} />
+        <Route path="tool/black-white" element={<BlackAndWhite />} />
+        <Route path="tool/sepia-tone" element={<SepiaToning />} />
         <Route path="*" element={<Navigate to="/en-US" replace />} />
       </Route>
     </Routes>
