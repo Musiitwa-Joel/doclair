@@ -26,7 +26,6 @@ import imageScratchRemoveRoutes from "./tools/image-scratch-remove/scratchRemove
 import imageColorRestoreRoutes from "./tools/image-color-restore/colorRestoreRoutes.js";
 import imageArtisticFiltersRoutes from "./tools/image-artistic-filters/artisticFiltersRoutes.js";
 import imageVintageEffectsRoutes from "./tools/image-vintage-effects/vintageEffectsRoutes.js";
-import imageHdrEffectsRoutes from "./tools/image-hdr-effects/hdrEffectsRoutes.js";
 
 const app = express();
 
@@ -140,7 +139,6 @@ app.use("/api/tools/image", imageScratchRemoveRoutes);
 app.use("/api/tools/image", imageColorRestoreRoutes);
 app.use("/api/tools/image", imageArtisticFiltersRoutes);
 app.use("/api/tools/image", imageVintageEffectsRoutes);
-app.use("/api/tools/image", imageHdrEffectsRoutes);
 
 // Root endpoint
 app.get("/", (req, res) => {
